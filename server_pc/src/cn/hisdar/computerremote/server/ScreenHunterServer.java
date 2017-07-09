@@ -5,12 +5,9 @@ import java.awt.MouseInfo;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
-import javax.imageio.spi.ImageReaderWriterSpi;
 
 import cn.hisdar.lib.log.HLog;
 
@@ -23,7 +20,7 @@ public class ScreenHunterServer {
 	
 	private ScreenHunterServer() {
 		listeners = new ArrayList<>();
-		startServer();
+		//startServer();
 	}
 	
 	public static ScreenHunterServer getInstance() {
@@ -105,12 +102,12 @@ public class ScreenHunterServer {
 					System.out.println(string);
 				}
 				
-				try {
-					ImageIO.write(screenImage, "bmp", new File("D:/temp/screen.png"));
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+//				try {
+//					ImageIO.write(screenImage, "bmp", new File("D:/temp/screen.png"));
+//				} catch (IOException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				}
 				for (int i = 0; i < listeners.size(); i++) {
 					listeners.get(i).screenPictureChangeEvent(screenHunterData);
 				}

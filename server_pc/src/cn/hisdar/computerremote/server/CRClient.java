@@ -22,12 +22,19 @@ import cn.hisdar.computerremote.event.EventDispatcher;
 import cn.hisdar.computerremote.event.HEventData;
 import cn.hisdar.lib.log.HLog;
 
-public class ComputerRemoteClient implements Runnable, ScreenHunterListener {
+/**
+ * @description dataSocket used to send and receive byte data
+ *              cmdSocket used to send and receive cmd(String) data
+ * @author Hisdar
+ *
+ */
 
+public class CRClient implements Runnable, ScreenHunterListener {
 
-	private ArrayList<ClientDisconnectListener> clientDisconnectListeners;
+	private ArrayList<ClientEventListener> clientDisconnectListeners;
 	private ScreenHunterServer screenHunterServer = null;
-	private Socket clientSocket;
+	private Socket cmdSocket;
+	private Socket dataSocket;
 	
 	private boolean isStopListen = false;
 	private static boolean isPrint = true;
@@ -36,9 +43,15 @@ public class ComputerRemoteClient implements Runnable, ScreenHunterListener {
 		
 	}
 	
-	public ComputerRemoteClient(Socket clientSocket) {
+	public CRClient() {
 		clientDisconnectListeners = new ArrayList<>();
-		this.clientSocket = clientSocket;
+		screenHunterServer = ScreenHunterServer.getInstance();
+		screenHunterServer.addScreenHunterListener(this);
+	}
+
+	public CRClient(Socket cmdsocket) {
+		clientDisconnectListeners = new ArrayList<>();
+		this.cmdSocket = cmdsocket;
 
 		screenHunterServer = ScreenHunterServer.getInstance();
 		screenHunterServer.addScreenHunterListener(this);
@@ -46,20 +59,20 @@ public class ComputerRemoteClient implements Runnable, ScreenHunterListener {
 	
 	@Override
 	public void run() {
-		if (clientSocket == null) {
+		if (cmdSocket == null) {
 			return;
 		}
 		
 		InputStream clientInputStream = null;
 		try {
-			clientInputStream = clientSocket.getInputStream();
+			clientInputStream = cmdSocket.getInputStream();
 		} catch (IOException e) {
 			HLog.el(e);
 			return;
 		}
 		
 		try {
-			sendServerInfor(clientSocket.getOutputStream());
+			sendServerInfor(cmdSocket.getOutputStream());
 		} catch (IOException e1) {
 			HLog.el(e1);
 		}
@@ -108,17 +121,17 @@ public class ComputerRemoteClient implements Runnable, ScreenHunterListener {
 		}
 		
 		try {
-			clientSocket.close();
+			cmdSocket.close();
 		} catch (IOException e) {
 			HLog.el(e);
 		}
 		
-		notifyClientDisconnectEvent(clientSocket);
+		notifyClientDisconnectEvent(cmdSocket);
 		
-		clientSocket = null;
+		cmdSocket = null;
 	}
 	
-	public void addClientDisconnectListener(ClientDisconnectListener listener) {
+	public void addClientDisconnectListener(ClientEventListener listener) {
 		for (int i = 0; i < clientDisconnectListeners.size(); i++) {
 			if (clientDisconnectListeners.get(i) == listener) {
 				return;
@@ -128,7 +141,7 @@ public class ComputerRemoteClient implements Runnable, ScreenHunterListener {
 		clientDisconnectListeners.add(listener);
 	}
 	
-	public void removeClientDiscnectListener(ClientDisconnectListener listener) {
+	public void removeClientDiscnectListener(ClientEventListener listener) {
 		for (int i = 0; i < clientDisconnectListeners.size(); i++) {
 			if (clientDisconnectListeners.get(i) == listener) {
 				clientDisconnectListeners.remove(i);
@@ -139,7 +152,7 @@ public class ComputerRemoteClient implements Runnable, ScreenHunterListener {
 	
 	private void notifyClientDisconnectEvent(Socket socket) {
 		for (int i = 0; i < clientDisconnectListeners.size(); i++) {
-			clientDisconnectListeners.get(i).clientDisconnectEvent(this);
+			clientDisconnectListeners.get(i).clientDisconnectEvent(this, socket);
 		}
 	}
 	
@@ -181,7 +194,7 @@ public class ComputerRemoteClient implements Runnable, ScreenHunterListener {
 		
 		//HLog.il(serverData);
 		try {
-			OutputStream inputStream = clientSocket.getOutputStream();
+			OutputStream inputStream = cmdSocket.getOutputStream();
 			inputStream.write(serverData.getBytes());
 			inputStream.flush();
 		} catch (IOException e) {
@@ -195,7 +208,7 @@ public class ComputerRemoteClient implements Runnable, ScreenHunterListener {
 	public boolean sendByteDataToClient(byte[] data) {
 		
 		HLog.il("Send screen picture data to client");
-		if (clientSocket == null) {
+		if (cmdSocket == null) {
 			return true;
 		}
 		
@@ -207,7 +220,7 @@ public class ComputerRemoteClient implements Runnable, ScreenHunterListener {
 		
 		HLog.il(serverData);
 		try {
-			OutputStream inputStream = clientSocket.getOutputStream();
+			OutputStream inputStream = cmdSocket.getOutputStream();
 			inputStream.write(serverData.getBytes());
 			inputStream.flush();
 			
@@ -243,12 +256,20 @@ public class ComputerRemoteClient implements Runnable, ScreenHunterListener {
 		}
 	}
 
-	public Socket getClientSocket() {
-		return clientSocket;
+	public Socket getCmdSocket() {
+		return cmdSocket;
 	}
 
-	public void setClientSocket(Socket clientSocket) {
-		this.clientSocket = clientSocket;
+	public void setCmdSocket(Socket clientSocket) {
+		this.cmdSocket = clientSocket;
+	}
+
+	public Socket getDataSocket() {
+		return dataSocket;
+	}
+
+	public void setDataSocket(Socket dataSocket) {
+		this.dataSocket = dataSocket;
 	}
 
 	@Override
@@ -263,5 +284,49 @@ public class ComputerRemoteClient implements Runnable, ScreenHunterListener {
 		}
 		
 		sendByteDataToClient(byteArrayOutputStream.toByteArray());
+	}
+	
+	public boolean sendCmd(String cmd) {
+		try {
+			cmdSocket.getOutputStream().write(cmd.getBytes());
+		} catch (IOException e) {
+			HLog.el("Send message to client fail, message:\n" + cmd);
+			HLog.el("client ip address:\n" + cmdSocket.getInetAddress().getHostAddress());
+			HLog.el(e);
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private byte[] longToBytes(long data) {
+		// the length of long is 8bytes
+		byte[] bytesData = new byte[8];
+		for (int i = 0; i < bytesData.length; i++) {
+			bytesData[i] = (byte)(0xFF & (data >> (i * 8)));
+		}
+		
+		return bytesData;
+	}
+	
+	public boolean sendData(byte[] data) {
+		try {
+			OutputStream out = dataSocket.getOutputStream();
+			
+			// 1.write data length to client, the length is 8, sizeof(long)
+			byte[] dataLength = longToBytes(data.length);
+			out.write(dataLength);
+			out.flush();
+			
+			// 2.write data to client
+			out.write(data);
+			out.flush();
+		} catch (IOException e) {
+			HLog.el("client ip address:\n" + cmdSocket.getInetAddress().getHostAddress());
+			HLog.el(e);
+			return false;
+		}
+
+		return true;
 	}
 }

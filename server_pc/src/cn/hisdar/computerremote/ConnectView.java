@@ -4,20 +4,19 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
 import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.StringTokenizer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import cn.hisdar.computerremote.common.Global;
+import cn.hisdar.computerremote.server.CRCSManager;
+import cn.hisdar.computerremote.server.CRClient;
+import cn.hisdar.computerremote.server.CRServer;
 import cn.hisdar.computerremote.server.ClientEventListener;
-import cn.hisdar.computerremote.server.ComputerRemoteClient;
-import cn.hisdar.computerremote.server.ComputerRemoteServer;
 import cn.hisdar.computerremote.server.ServerEventListener;
 import cn.hisdar.lib.commandline.CommandLineAdapter;
 import cn.hisdar.lib.configuration.ConfigItem;
@@ -30,6 +29,11 @@ import cn.hisdar.lib.ui.output.HKeyValuePanel;
 
 public class ConnectView extends JPanel implements ClientEventListener, ServerEventListener {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5964789222548553400L;
+	
 	private TitlePanel serverInfoTitlePanel = null;
 	private TitlePanel clientInfoTitlePanel = null;
 	
@@ -69,8 +73,10 @@ public class ConnectView extends JPanel implements ClientEventListener, ServerEv
 		
 		add(mainPanel, BorderLayout.CENTER);
 		
-		ComputerRemoteServer.getInstance().addClientEventListener(this);
-		ComputerRemoteServer.getInstance().addServerEventListener(this);
+		/*CRServer cmdServer = CRServerManager.getInstance().getCmdServer();
+		cmdServer.addClientEventListener(this);
+		cmdServer.addServerEventListener(this);*/
+		CRCSManager.getInstance().addServerEventListener(this);
 	}
 	
 	private JPanel getServerInforPanel() {
@@ -92,11 +98,11 @@ public class ConnectView extends JPanel implements ClientEventListener, ServerEv
 	}
 
 	@Override
-	public void clientConnectEvent(ComputerRemoteClient computerRemoteClient) {
+	public void clientConnectEvent(CRServer crServer, Socket socket) {
 		
-		HLog.il("Client connect:" + computerRemoteClient.getClientSocket().getInetAddress().getHostAddress());
+		HLog.il("Client connect:" + socket.getInetAddress().getHostAddress());
 		
-		ClientInforPanel currentClientPanel = new ClientInforPanel(computerRemoteClient.getClientSocket());
+		ClientInforPanel currentClientPanel = new ClientInforPanel(socket);
 		HLog.il("Create information panel");
 		
 		currentClientPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
@@ -109,12 +115,12 @@ public class ConnectView extends JPanel implements ClientEventListener, ServerEv
 	}
 
 	@Override
-	public void clientDisconnectEvent(ComputerRemoteClient computerRemoteClient) {
+	public void clientDisconnectEvent(CRClient crClient, Socket socket) {
 		
 		for (int i = 0; i < clientInforPanels.size(); i++) {
-			if (clientInforPanels.get(i).getSocket() == computerRemoteClient.getClientSocket()) {
+			if (clientInforPanels.get(i).getSocket() == socket) {
 		
-				HLog.il("Client disconnect:" + computerRemoteClient.getClientSocket().getInetAddress().getHostAddress());
+				HLog.il("Client disconnect:" + socket.getInetAddress().getHostAddress());
 				
 				clientInforPanel.removeChild(clientInforPanels.get(i));
 				clientInforPanels.remove(i);
@@ -126,17 +132,17 @@ public class ConnectView extends JPanel implements ClientEventListener, ServerEv
 	}
 
 	@Override
-	public void serverEvent(ServerSocket serverSocket, int serverState) {
-		if (serverState == ComputerRemoteServer.SERVER_STATE_START) {
+	public void serverStateEvent(CRServer crServer, int serverState) {
+		if (serverState == CRServer.SERVER_STATE_START) {
 			serverStatePanel.setValue("Æô¶¯");
 			serverStatePanel.getValueLabel().setForeground(new Color(0x32CD32));
-		} else if (serverState == ComputerRemoteServer.SERVER_STATE_STOP) {
+		} else if (serverState == CRServer.SERVER_STATE_STOP) {
 			serverStatePanel.setValue("Í£Ö¹");
 			serverStatePanel.getValueLabel().setForeground(new Color(0xCD2626));
 		}
 		
-		if (serverSocket != null) {
-			serverPortPanel.setValue(serverSocket.getLocalPort() + "");
+		if (crServer != null) {
+			serverPortPanel.setValue(crServer.getServerSocket().getLocalPort() + "");
 
 			try {
 				//String currentIpAddress = InetAddress.getLocalHost().getHostAddress();
@@ -145,7 +151,7 @@ public class ConnectView extends JPanel implements ClientEventListener, ServerEv
 
 				serverIpPanel.setValue(currentIpAddress);
 				serverNamePanel.setValue(currentHostName);
-				checkServerInfo(currentIpAddress, serverSocket.getLocalPort() + "");
+				checkServerInfo(currentIpAddress, crServer.getServerSocket().getLocalPort() + "");
 			} catch (UnknownHostException e) {
 				HLog.el("get local host information fail");
 				HLog.el(e);

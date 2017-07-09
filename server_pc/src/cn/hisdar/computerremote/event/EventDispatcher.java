@@ -19,8 +19,8 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import cn.hisdar.computerremote.common.Global;
-import cn.hisdar.computerremote.server.ComputerRemoteClient;
-import cn.hisdar.computerremote.server.ComputerRemoteServer;
+import cn.hisdar.computerremote.server.CRClient;
+import cn.hisdar.computerremote.server.CRServer;
 import cn.hisdar.computerremote.server.ScreenSizeEventListener;
 import cn.hisdar.lib.adapter.IntegerAdapter;
 import cn.hisdar.lib.log.HLog;
