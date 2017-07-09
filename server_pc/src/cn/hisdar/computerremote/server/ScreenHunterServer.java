@@ -105,12 +105,12 @@ public class ScreenHunterServer {
 					System.out.println(string);
 				}
 				
-				try {
-					ImageIO.write(screenImage, "bmp", new File("D:/temp/screen.png"));
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+//				try {
+//					ImageIO.write(screenImage, "bmp", new File("D:/temp/screen.png"));
+//				} catch (IOException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				}
 				for (int i = 0; i < listeners.size(); i++) {
 					listeners.get(i).screenPictureChangeEvent(screenHunterData);
 				}

@@ -10,37 +10,25 @@ import java.util.ArrayList;
 import cn.hisdar.lib.log.HLog;
 import cn.hisdar.lib.net.HInetAddress;
 
-public class ComputerRemoteServer implements ClientDisconnectListener {
+public class CRServer implements ClientDisconnectListener {
 
 	public static final int SERVER_STATE_STOP = 0;
 	public static final int SERVER_STATE_START = 1;
 	
-	private static ComputerRemoteServer computerRemoteServer = null;
 	private static ArrayList<ClientEventListener> clientEventListeners = null;
 	private static ArrayList<ServerEventListener> serverEventListeners = null;
 
 	private static ServerSocket serverSocket = null;
 	private static int serverState = SERVER_STATE_STOP;
 	
+	private int serverPort = 0;
 	private boolean isServerStart;
 	
-	private ComputerRemoteServer() {
+	public CRServer(int port) {
+		serverPort = port;
 		isServerStart = false;
-	}
-	
-	public static ComputerRemoteServer getInstance() {
-		if (computerRemoteServer == null) {
-			synchronized (ComputerRemoteServer.class) {
-				if (computerRemoteServer == null) {
-					computerRemoteServer = new ComputerRemoteServer();
-					
-					clientEventListeners = new ArrayList<>();
-					serverEventListeners = new ArrayList<>();
-				}
-			}
-		}
-		
-		return computerRemoteServer;
+		clientEventListeners = new ArrayList<>();
+		serverEventListeners = new ArrayList<>();
 	}
 	
 	public void startServer() {
@@ -49,9 +37,8 @@ public class ComputerRemoteServer implements ClientDisconnectListener {
 		}
 		
 		HLog.il("Start computer remote server");
-		
-		Thread controlerListenerServer = new Thread(new ControlerListenerServer(this));
-		controlerListenerServer.start();
+		Thread serverThread = new Thread(new ServerRunnable(this));
+		serverThread.start();
 		
 		isServerStart = true;
 	}
@@ -73,83 +60,7 @@ public class ComputerRemoteServer implements ClientDisconnectListener {
 		isServerStart = false;
 	}
 	
-	private class ControlerListenerServer implements Runnable {
 
-		private static final int DEFAULT_SERVER_PORT = 5299;
-		private static final int MAX_SOCKET_PORT = 65535;
-		
-		private int serverPort = DEFAULT_SERVER_PORT;
-		private ComputerRemoteServer computerRemoteServer = null;
-		
-		private ArrayList<Socket> clientSockets = null;
-		
-		public ControlerListenerServer(ComputerRemoteServer computerRemoteServer) {
-			this.computerRemoteServer = computerRemoteServer;
-			clientSockets = new ArrayList<>();
-		}
-		
-		@Override
-		public void run() {
-			
-			for (serverPort = DEFAULT_SERVER_PORT; serverPort <= MAX_SOCKET_PORT; serverPort++) {
-				try {
-					serverSocket = new ServerSocket(serverPort);
-					break;
-				} catch (IOException e) {
-					HLog.dl(e);
-					if (serverPort == MAX_SOCKET_PORT) {
-						HLog.el("Init server fail");
-						return;
-					}
-				}
-			}
-			
-			serverState = SERVER_STATE_START;
-			notifyServerEvent(serverSocket, serverState);
-			
-			String[] hostAddresses = HInetAddress.getInetAddresses();
-			for (int i = 0; i < hostAddresses.length; i++) {
-				HLog.il("hostAddress - " + i + ":" + hostAddresses[i]);
-			}
-			
-			while (isServerStart) {
-				try {
-					Socket clientSocket = serverSocket.accept();
-					
-					HLog.il("Client connect");
-					
-					clientSockets.add(clientSocket);
-					
-					ComputerRemoteClient remoteClient = new ComputerRemoteClient(clientSocket);
-					Thread remoteClientThread = new Thread(remoteClient);
-					remoteClientThread.start();
-					remoteClient.addClientDisconnectListener(computerRemoteServer);
-					notifyClientConnectEvent(remoteClient);
-					
-				} catch (IOException e) {
-					HLog.el(e);
-					break;
-				}
-			}
-			
-			for (int i = 0; i < clientSockets.size(); i++) {
-				try {
-					Communication communication = new Communication();
-					String exitMessage = communication.packageExitEventData();
-					
-					sendMessageToClient(clientSockets.get(0), exitMessage);
-					
-					clientSockets.get(0).close();
-					clientSockets.remove(0);
-				} catch (IOException e) {
-					HLog.el(e);
-				}
-			}
-			
-			serverState = SERVER_STATE_STOP;
-			notifyServerEvent(serverSocket, serverState);
-		}
-	}
 	
 	private void sendMessageToClient(Socket socket, String message) {
 		try {
@@ -180,15 +91,15 @@ public class ComputerRemoteServer implements ClientDisconnectListener {
 		}
 	}
 	
-	public void notifyClientConnectEvent(ComputerRemoteClient crc) {
+	public void notifyClientConnectEvent(Socket crc) {
 		for (int i = 0; i < clientEventListeners.size(); i++) {
-			clientEventListeners.get(i).clientConnectEvent(crc);
+			clientEventListeners.get(i).clientConnectEvent(this, crc);
 		}
 	}
 	
-	public void notifyClientDisconnectEvent(ComputerRemoteClient crc) {
+	public void notifyClientDisconnectEvent(Socket crc) {
 		for (int i = 0; i < clientEventListeners.size(); i++) {
-			clientEventListeners.get(i).clientDisconnectEvent(crc);
+			clientEventListeners.get(i).clientDisconnectEvent(this, crc);
 		}
 	}
 
@@ -217,8 +128,8 @@ public class ComputerRemoteServer implements ClientDisconnectListener {
 	}
 	
 	@Override
-	public void clientDisconnectEvent(ComputerRemoteClient computerRemoteClient) {
-		notifyClientDisconnectEvent(computerRemoteClient);		
+	public void clientDisconnectEvent(Socket socket) {
+		notifyClientDisconnectEvent(socket);
 	}
 	
 	private class ServerEeventNotifyThread extends Thread {
@@ -239,6 +150,66 @@ public class ComputerRemoteServer implements ClientDisconnectListener {
 			for (int i = 0; i < serverEventListeners.size(); i++) {
 				serverEventListeners.get(i).serverEvent(serverSocket, serverState);
 			}
+		}
+	}
+
+	private class ServerRunnable implements Runnable {
+
+		private CRServer crServer = null;
+		private ArrayList<Socket> clientSockets = null;
+		
+		public ServerRunnable(CRServer crServer) {
+			this.crServer = crServer;
+			clientSockets = new ArrayList<>();
+		}
+		
+		@Override
+		public void run() {
+			
+			try {
+				serverSocket = new ServerSocket(serverPort);
+			} catch (IOException e1) {
+				HLog.el(e1);
+				HLog.el("Start server socket fail, port=" + serverPort);
+				return;
+			}
+			
+			serverState = SERVER_STATE_START;
+			notifyServerEvent(serverSocket, serverState);
+			
+			String[] hostAddresses = HInetAddress.getInetAddresses();
+			for (int i = 0; i < hostAddresses.length; i++) {
+				HLog.il("hostAddress - " + i + ":" + hostAddresses[i]);
+			}
+			
+			while (isServerStart) {
+				try {
+					Socket clientSocket = serverSocket.accept();
+					clientSockets.add(clientSocket);
+					notifyClientConnectEvent(clientSocket);
+					
+				} catch (IOException e) {
+					HLog.el(e);
+					break;
+				}
+			}
+			
+			for (int i = 0; i < clientSockets.size(); i++) {
+				try {
+					Communication communication = new Communication();
+					String exitMessage = communication.packageExitEventData();
+					
+					sendMessageToClient(clientSockets.get(0), exitMessage);
+					
+					clientSockets.get(0).close();
+					clientSockets.remove(0);
+				} catch (IOException e) {
+					HLog.el(e);
+				}
+			}
+			
+			serverState = SERVER_STATE_STOP;
+			notifyServerEvent(serverSocket, serverState);
 		}
 	}
 }
