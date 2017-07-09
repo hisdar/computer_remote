@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Config>
+    <autoStart>true</autoStart>
+    <startServerWhenApplicationStart>true</startServerWhenApplicationStart>
+    <lastIpAddress>192.168.1.104</lastIpAddress>
+    <port>5299</port>
+</Config>
