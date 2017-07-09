@@ -14,7 +14,8 @@ import javax.swing.JPanel;
 import org.omg.CORBA.PRIVATE_MEMBER;
 
 import cn.hisdar.computerremote.common.Global;
-import cn.hisdar.computerremote.server.ComputerRemoteServer;
+import cn.hisdar.computerremote.server.CRServer;
+import cn.hisdar.computerremote.server.CRCSManager;
 import cn.hisdar.computerremote.setting.ComputerRemoteSettingDialog;
 import cn.hisdar.lib.configuration.HConfig;
 import cn.hisdar.lib.ui.HSplitPane;
@@ -36,7 +37,7 @@ public class ServerControlerView extends JPanel implements ActionListener {
 	
 	private JButton settingButton;
 	
-	private ComputerRemoteServer computerRemoteServer;
+	private CRServer computerRemoteServer;
 	
 	private boolean isServerStart;
 	
@@ -46,7 +47,7 @@ public class ServerControlerView extends JPanel implements ActionListener {
 	public ServerControlerView() {
 		
 		applicationConfig = HConfig.getInstance(Global.APPLICATION_CONFIG_FILE);
-		computerRemoteServer = ComputerRemoteServer.getInstance();
+		computerRemoteServer = CRCSManager.getInstance().getCmdServer();
 		
 		setOpaque(true);
 		setBackground(new Color(0xbcc7d8));

@@ -1,12 +1,12 @@
 package cn.hisdar.computerremote.event;
 
 import cn.hisdar.computerremote.debug.DebugerTimeDataContainer;
-import cn.hisdar.computerremote.server.ComputerRemoteClient;
+import cn.hisdar.computerremote.server.CRClient;
 
 public class HEventData {
 	
 	public String eventData;
-	public ComputerRemoteClient client;
+	public CRClient client;
 	public DebugerTimeDataContainer timeDataContainer;
 
 	public HEventData(HEventData eventData) {
@@ -15,13 +15,13 @@ public class HEventData {
 		this.timeDataContainer = eventData.timeDataContainer;
 	}
 	
-	public HEventData(String string, ComputerRemoteClient client) {
+	public HEventData(String string, CRClient client) {
 		this.eventData = string;
 		this.client = client;
 		this.timeDataContainer = new DebugerTimeDataContainer();
 	}
 	
-	public HEventData(String string, ComputerRemoteClient client, DebugerTimeDataContainer timeDataContainer) {
+	public HEventData(String string, CRClient client, DebugerTimeDataContainer timeDataContainer) {
 		this.eventData = string;
 		this.client = client;
 		this.timeDataContainer = timeDataContainer;
