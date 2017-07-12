@@ -14,14 +14,16 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-@SuppressLint("HandlerLeak") public class ServerCommunication extends Thread {
+@SuppressLint("HandlerLeak")
+public class ServerCommunication extends Thread {
 
 	private static final int CONNECT_TO_SERVER = 1;
 	private static final int SEND_EVENT_DATA = 2;
 	private static final int DISCONNECT = 3;
 	
 	private static final String IP_ADDRESS = "IP_ADDRESS";
-	private static final String PORT = "PORT";
+	private static final String CMD_SERVER_PORT = "CMD_SERVER_PORT";
+	private static final String DATA_SERVER_PORT = "DATA_SERVER_PORT";
 	private static final String EVENT_DATA = "MOTION_EVENT";
 
 	private static ServerCommunication serverCommunication = null;
@@ -29,10 +31,12 @@ import java.net.UnknownHostException;
 	private Message messageToHandle = null;
 	private Thread messageOwner = null;
 	
-	private Socket communicationSocket = null;
+	private Socket cmdSocket = null;
+	private Socket dataSocket = null;
 	private String currentIpAddress = null;
 	
-	private ServerReader serverReader = null;
+	private CmdServerReader cmdServerReader = null;
+	private DataServerReader dataServerReader = null;
 	
 	private ServerCommunication() {		
 		start();
@@ -70,7 +74,7 @@ import java.net.UnknownHostException;
 					disconnectEventHandler(messageToHandle);
 					break;
 				case SEND_EVENT_DATA:
-					sendData(messageToHandle);
+					sendCmd(messageToHandle);
 					break;
 				default:
 					break;
@@ -82,21 +86,21 @@ import java.net.UnknownHostException;
 		}
 	}
 	
-	private boolean sendData(Message message) {
+	private boolean sendCmd(Message message) {
 		
 		String data = message.getData().getString(EVENT_DATA);
 		
 		data = Global.DATA_BEGIN_FLAG + "\n" + data + "\n" + Global.DATA_END_FLAG + "\n";
 		
 		//Log.i(ComputerRemoteServerActivity.TAG, data);
-		if (communicationSocket == null) {
+		if (cmdSocket == null) {
 			Log.e(CRAActivity.TAG, "communicationSocket is null");
 			return false;
 		}
 		
 		try {
-			communicationSocket.getOutputStream().write(data.getBytes());
-			communicationSocket.getOutputStream().flush();
+			cmdSocket.getOutputStream().write(data.getBytes());
+			cmdSocket.getOutputStream().flush();
 		} catch (IOException e) {
 			Log.e(CRAActivity.TAG, "socket send data fail:" + e.getMessage());
 			return false;
@@ -105,13 +109,14 @@ import java.net.UnknownHostException;
 		return true;
 	}
 	
-	public boolean connectToServer(Thread owner, String ipAddress, int port) {
+	public boolean connectToCmdServer(Thread owner, String ipAddress, int cmd_server_port, int data_server_port) {
 	
 		Log.i(CRAActivity.TAG, "connect to server");
 		Message connectToServerMessage = new Message();
 		Bundle data = new Bundle();
 		data.putString(IP_ADDRESS, ipAddress);
-		data.putInt(PORT, port);
+		data.putInt(CMD_SERVER_PORT, cmd_server_port);
+		data.putInt(DATA_SERVER_PORT, data_server_port);
 		connectToServerMessage.what = CONNECT_TO_SERVER;
 		connectToServerMessage.setData(data);
 		
@@ -124,7 +129,7 @@ import java.net.UnknownHostException;
 		Message connectToServerMessage = new Message();
 		Bundle data = new Bundle();
 		data.putString(IP_ADDRESS, ipAddress);
-		data.putInt(PORT, port);
+		data.putInt(CMD_SERVER_PORT, port);
 		connectToServerMessage.what = DISCONNECT;
 		connectToServerMessage.setData(data);
 		
@@ -214,34 +219,39 @@ import java.net.UnknownHostException;
 	private boolean connectToServerEventHandler(Message messsage) {
 		
 		String ipAddress = messageToHandle.getData().getString(IP_ADDRESS);
-		int port = messageToHandle.getData().getInt(PORT);
+		int cmdPort = messageToHandle.getData().getInt(CMD_SERVER_PORT);
+		int dataPort = messageToHandle.getData().getInt(DATA_SERVER_PORT);
 		
 		// if socket is connect, check is this is the target connection
-		if (communicationSocket != null && communicationSocket.isConnected()) {
+		if (cmdSocket != null && cmdSocket.isConnected()) {
 			
 			if (currentIpAddress.equals(ipAddress)) {
 				Log.e(CRAActivity.TAG, "connection already on");
 				return true;
 			} else {
 				try {
-					communicationSocket.close();
+					cmdSocket.close();
 				} catch (IOException e) {
 					Log.e(CRAActivity.TAG, "close connection fail:" + e.getMessage());
 				}
-				
-				communicationSocket = null;
+
+				cmdSocket = null;
 			}
 		}
 		
 		// if not connect, connect to server
 		try {
-			communicationSocket = new Socket(ipAddress, port);
-			currentIpAddress = communicationSocket.getInetAddress().getHostAddress();
+			cmdSocket = new Socket(ipAddress, cmdPort);
+			dataSocket = new Socket(ipAddress, dataPort);
+			currentIpAddress = cmdSocket.getInetAddress().getHostAddress();
 			Log.e(CRAActivity.TAG, "connect to server success:");
 			
 			// start thread to read server message
-			serverReader = new ServerReader(communicationSocket);
-			serverReader.startServerReader();
+			cmdServerReader = new CmdServerReader(cmdSocket);
+			cmdServerReader.startServerReader();
+
+			dataServerReader = new DataServerReader(dataSocket);
+			dataServerReader.startServerReader();
 			
 		} catch (UnknownHostException e) {
 			Log.e(CRAActivity.TAG, "connect to server fail:" + e.getMessage().toString());
@@ -256,20 +266,20 @@ import java.net.UnknownHostException;
 	
 	private void disconnectEventHandler(Message messageToHandle2) {
 		String ipAddress = messageToHandle.getData().getString(IP_ADDRESS);
-		int port = messageToHandle.getData().getInt(PORT);
+		int port = messageToHandle.getData().getInt(CMD_SERVER_PORT);
 		
 		// if socket is connect, check is this is the target connection
-		if (communicationSocket != null && communicationSocket.isConnected()) {
+		if (cmdSocket != null && cmdSocket.isConnected()) {
 			
 			if (currentIpAddress.equals(ipAddress)) {
 				try {
-					serverReader.stopServerReader();
-					communicationSocket.close();
+					cmdServerReader.stopServerReader();
+					cmdSocket.close();
 				} catch (IOException e) {
 					Log.e(CRAActivity.TAG, "close connection fail:" + e.getMessage());
 				}
-				
-				communicationSocket = null;
+
+				cmdSocket = null;
 			}
 		}
 	}

@@ -78,6 +78,7 @@ public class EventDispatcher {
 		Node computerRemoteNode = getNodeFromNodeList(eventDataNodes, Global.XML_NODE_COMPUTER_REMOTE);
 		if (computerRemoteNode == null) {
 			Log.e(CRAActivity.TAG, "Node:XML_NODE_COMPUTER_REMOTE[" + Global.XML_NODE_COMPUTER_REMOTE + "] not found" );
+			Log.i(CRAActivity.TAG, "data:" + eventData.eventData);
 			return ;
 		}
 		

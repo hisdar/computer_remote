@@ -167,9 +167,9 @@ public class CRAActivity extends AppCompatActivity
         }
 
         // try to connect to server
-        ServerCommunication serverCommunication = ServerCommunication.getInstance();
-        serverCommunication.disconnect(getMainLooper().getThread(), ipAddress, port);
-        boolean ret = serverCommunication.connectToServer(getMainLooper().getThread(), ipAddress, port);
+        ServerCommunication sc = ServerCommunication.getInstance();
+        sc.disconnect(getMainLooper().getThread(), ipAddress, port);
+        boolean ret = sc.connectToCmdServer(getMainLooper().getThread(), ipAddress, port, 5300);
         if (!ret) {
             showMessage("提示", "服务器连接失败");
             return;
