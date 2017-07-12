@@ -20,6 +20,9 @@ import cn.hisdar.computerremote.common.Global;
 import cn.hisdar.cr.debug.DebugerTimeDataContainer;
 import cn.hisdar.cr.event.EventDispatcher;
 import cn.hisdar.cr.event.HEventData;
+import cn.hisdar.cr.screen.ScreenHunterListener;
+import cn.hisdar.cr.screen.ScreenHunterServer;
+import cn.hisdar.lib.adapter.MathAdapter;
 import cn.hisdar.lib.log.HLog;
 
 /**
@@ -29,10 +32,9 @@ import cn.hisdar.lib.log.HLog;
  *
  */
 
-public class CRClient implements Runnable, ScreenHunterListener {
+public class CRClient extends Thread {
 
 	private ArrayList<ClientEventListener> clientDisconnectListeners;
-	private ScreenHunterServer screenHunterServer = null;
 	private Socket cmdSocket;
 	private Socket dataSocket;
 	
@@ -45,16 +47,21 @@ public class CRClient implements Runnable, ScreenHunterListener {
 	
 	public CRClient() {
 		clientDisconnectListeners = new ArrayList<>();
-		screenHunterServer = ScreenHunterServer.getInstance();
-		screenHunterServer.addScreenHunterListener(this);
 	}
 
 	public CRClient(Socket cmdsocket) {
 		clientDisconnectListeners = new ArrayList<>();
 		this.cmdSocket = cmdsocket;
 
-		screenHunterServer = ScreenHunterServer.getInstance();
-		screenHunterServer.addScreenHunterListener(this);
+	}
+	
+	public void startClient() {
+		isStopListen = false;
+		start();
+	}
+	
+	public void stopClient() {
+		isStopListen = true;
 	}
 	
 	@Override
@@ -205,41 +212,6 @@ public class CRClient implements Runnable, ScreenHunterListener {
 		return true;
 	}
 	
-	public boolean sendByteDataToClient(byte[] data) {
-		
-		HLog.il("Send screen picture data to client");
-		if (cmdSocket == null) {
-			return true;
-		}
-		
-		String serverData = String.format(Global.BYTE_DATA_HEAD_FORMAT, data.length); // 基本数据封装
-		String dataType = String.format(Global.DATA_TYPE_FORMAT, Global.DATA_TYPE_SCREEN_PICTURE);
-		serverData = String.format(Global.CONTROL_DATA_LABEL_2, dataType, serverData);          // computerRemote头封装
-		serverData = Global.XML_FILE_HEAD + serverData;
-		serverData = Global.DATA_BEGIN_FLAG + "\n" + serverData + Global.DATA_END_FLAG + "\n";
-		
-		HLog.il(serverData);
-		try {
-			OutputStream inputStream = cmdSocket.getOutputStream();
-			inputStream.write(serverData.getBytes());
-			inputStream.flush();
-			
-			FileOutputStream fileOutputStream = new FileOutputStream(new File("D:/test.bmp"));
-			fileOutputStream.write(data);
-			fileOutputStream.flush();
-			fileOutputStream.close();
-			
-			printByteData(data);
-			inputStream.write(data);
-			inputStream.flush();
-		} catch (IOException e) {
-			HLog.el(e);
-			return false;
-		}
-		
-		return true;
-	}
-	
 	public void printByteData(byte[] data) {
 		if (!isPrint) {
 			return;
@@ -271,20 +243,6 @@ public class CRClient implements Runnable, ScreenHunterListener {
 	public void setDataSocket(Socket dataSocket) {
 		this.dataSocket = dataSocket;
 	}
-
-	@Override
-	public void screenPictureChangeEvent(ScreenHunterData screenHunterData) {
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		try {
-			ImageIO.write(screenHunterData.getScreenImage(), "png", byteArrayOutputStream);
-		} catch (IOException e) {
-			HLog.el(e.getMessage());
-			HLog.el(e);
-			return;
-		}
-		
-		sendByteDataToClient(byteArrayOutputStream.toByteArray());
-	}
 	
 	public boolean sendCmd(String cmd) {
 		try {
@@ -299,35 +257,31 @@ public class CRClient implements Runnable, ScreenHunterListener {
 		return true;
 	}
 	
-	private byte[] longToBytes(long data) {
-		// the length of long is 8 bytes
-		byte[] bytesData = new byte[8];
-		for (int i = 0; i < bytesData.length; i++) {
-			bytesData[i] = (byte)(0xFF & (data >> (i * 8)));
-		}
-		
-		return bytesData;
-	}
-	
-	private static byte[] intToBytes(int data) {
-		// the length of long is 8bytes
-		byte[] bytesData = new byte[4];
-		for (int i = 0; i < bytesData.length; i++) {
-			bytesData[i] = (byte)(0xFF & (data >> (i * 8)));
-		}
-		
-		return bytesData;
-	}
-	
 	public boolean sendData(byte[] data) {
+		
+		if (dataSocket == null) {
+			return false;
+		}
+		
 		try {
 			OutputStream out = dataSocket.getOutputStream();
 			
-			// 1.write data length to client, the length is 8, sizeof(long)
-			byte[] dataLength = intToBytes(data.length);
-			out.write(dataLength);
+			// write send time
+			out.write(MathAdapter.longToBytes((new Date()).getTime()));
 			out.flush();
 			
+			// 1.write data length to client, the length is 8, sizeof(long)
+			byte[] dataLength = MathAdapter.intToBytes(data.length);
+			
+			for (int i = 0; i < dataLength.length; i++) {
+				HLog.il("datalen=" + dataLength[i]);
+			}
+			
+			HLog.i("Data size=" + data.length);
+			
+			out.write(dataLength);
+			out.flush();
+
 			// 2.write data to client
 			out.write(data);
 			out.flush();

@@ -8,11 +8,11 @@ import java.util.ArrayList;
 
 import javax.swing.JPanel;
 
-import cn.hisdar.cr.communication.ScreenSizeEventListener;
 import cn.hisdar.cr.event.EventDispatcher;
 import cn.hisdar.cr.event.HMotionEvent;
 import cn.hisdar.cr.event.HMotionEventListener;
 import cn.hisdar.cr.event.Pointer;
+import cn.hisdar.cr.screen.ScreenSizeEventListener;
 
 public class ControlerView extends JPanel implements HMotionEventListener, ScreenSizeEventListener {
 

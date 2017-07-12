@@ -1,7 +1,9 @@
-package cn.hisdar.cr.communication;
+package cn.hisdar.cr.screen;
 
 import java.net.ServerSocket;
 import java.net.Socket;
+
+import cn.hisdar.cr.communication.CRServer;
 
 public interface ServerEventListener {
 

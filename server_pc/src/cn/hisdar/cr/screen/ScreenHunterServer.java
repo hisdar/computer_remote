@@ -1,4 +1,4 @@
-package cn.hisdar.cr.communication;
+package cn.hisdar.cr.screen;
 
 import java.awt.AWTException;
 import java.awt.MouseInfo;
@@ -7,8 +7,7 @@ import java.awt.Robot;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
-import javax.imageio.ImageIO;
-
+import cn.hisdar.cr.communication.ScreenPictureData;
 import cn.hisdar.lib.log.HLog;
 
 public class ScreenHunterServer {
@@ -20,7 +19,7 @@ public class ScreenHunterServer {
 	
 	private ScreenHunterServer() {
 		listeners = new ArrayList<>();
-		//startServer();
+		startServer();
 	}
 	
 	public static ScreenHunterServer getInstance() {
@@ -34,7 +33,6 @@ public class ScreenHunterServer {
 		
 		return screenHunterServer;
 	}
-	
 	
 	public void addScreenHunterListener(ScreenHunterListener l) {
 		for (int i = 0; i < listeners.size(); i++) {
@@ -82,25 +80,32 @@ public class ScreenHunterServer {
         }
         return bfImage;
     }
+    
+    public ScreenPictureData getScreenHunterData() {
+    	int screenWidth = ((int)java.awt.Toolkit.getDefaultToolkit().getScreenSize().width);
+		int screenHeight = ((int)java.awt.Toolkit.getDefaultToolkit().getScreenSize().height); 
+		
+		BufferedImage screenImage = getScreenShot(0, 0, screenWidth, screenHeight);
+		ScreenPictureData screenHunterData = new ScreenPictureData();
+		screenHunterData.setScreenImage(screenImage);
+		screenHunterData.setMouseLocation(MouseInfo.getPointerInfo().getLocation());
+		
+		return screenHunterData;
+		
+    }
 	
 	private class ScreenHunterThread extends Thread {
 		
 		public void run() {
 			
 			HLog.il("ScreenHunterThread start");
-			int screenWidth = ((int)java.awt.Toolkit.getDefaultToolkit().getScreenSize().width);
-			int screenHeight = ((int)java.awt.Toolkit.getDefaultToolkit().getScreenSize().height); 
 			
 			while (!isStop) {
-				BufferedImage screenImage = getScreenShot(0, 0, screenWidth, screenHeight);
-				ScreenHunterData screenHunterData = new ScreenHunterData();
-				screenHunterData.setScreenImage(screenImage);
-				screenHunterData.setMouseLocation(MouseInfo.getPointerInfo().getLocation());
 				
-				String readFormats[] = ImageIO.getReaderFormatNames();
-				for (String string : readFormats) {
-					System.out.println(string);
-				}
+//				String readFormats[] = ImageIO.getReaderFormatNames();
+//				for (String string : readFormats) {
+//					System.out.println(string);
+//				}
 				
 //				try {
 //					ImageIO.write(screenImage, "bmp", new File("D:/temp/screen.png"));
@@ -108,6 +113,8 @@ public class ScreenHunterServer {
 //					// TODO Auto-generated catch block
 //					e1.printStackTrace();
 //				}
+				
+				ScreenPictureData screenHunterData = getScreenHunterData();
 				for (int i = 0; i < listeners.size(); i++) {
 					listeners.get(i).screenPictureChangeEvent(screenHunterData);
 				}

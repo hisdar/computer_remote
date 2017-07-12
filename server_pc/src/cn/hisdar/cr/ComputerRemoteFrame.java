@@ -25,6 +25,7 @@ public class ComputerRemoteFrame extends JFrame implements TrayIconEventListener
 	private ControlerView controlerView;
 	private ConnectView connectView;
 	private ServerControlerView serverControlerView;
+	private DebugView debugView;
 	
 	private ComputerRemoteSystemTray systemTray;
 	private FrameEventHandler frameEventHandler;
@@ -50,10 +51,12 @@ public class ComputerRemoteFrame extends JFrame implements TrayIconEventListener
 		connectView = new ConnectView();
 		controlerView = new ControlerView();
 		serverControlerView = new ServerControlerView();
+		debugView = new DebugView();
 		
 		JPanel serverControlAndControlerView = new JPanel(new BorderLayout());
 		serverControlAndControlerView.add(serverControlerView, BorderLayout.NORTH);
 		serverControlAndControlerView.add(controlerView, BorderLayout.CENTER);
+		serverControlAndControlerView.add(debugView, BorderLayout.EAST);
 		
 		HSplitPane outputViewAndMainView = new HSplitPane(HSplitPane.HORIZONTAL_SPLIT);
 		outputViewAndMainView.setDividerLocation(0.7);

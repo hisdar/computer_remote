@@ -22,19 +22,13 @@ import com.cn.hisdar.cra.HServerEvent;
 import com.cn.hisdar.cra.HServerEventListener;
 import com.cn.hisdar.cra.R;
 import com.cn.hisdar.cra.common.Global;
-import com.cn.hisdar.cra.server.HScreenPictureListener;
-import com.cn.hisdar.cra.server.HScreenPiture;
-import com.cn.hisdar.cra.server.ServerCommunication;
+import com.cn.hisdar.cra.commnunication.AbstractDataType;
+import com.cn.hisdar.cra.commnunication.ServerCommunication;
+import com.cn.hisdar.cra.server.ds.DataServer;
+import com.cn.hisdar.cra.server.ds.CommunicationEventListener;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -43,7 +37,7 @@ import java.util.List;
  * @see
  */
 @SuppressLint("ClickableViewAccessibility") public class MouseControlActivity extends Activity
-	implements OnTouchListener, HResponseDataListener, HServerEventListener, HScreenPictureListener {
+	implements OnTouchListener, HResponseDataListener, HServerEventListener, CommunicationEventListener {
 	
 	private static final int SHOW_RESPONSE_MESSAGE 	= 0x10001;
 	private static final int SERVER_EVENT 			= 0x10002;
@@ -76,7 +70,9 @@ import java.util.List;
 		EventDispatcher eventDispatcher = EventDispatcher.getInstance();
 		eventDispatcher.addHResponseDataListener(this);
 		eventDispatcher.addHServerEventListener(this);
-		eventDispatcher.addScreenPictureEventListener(this);
+
+        DataServer dataServer = DataServer.getInstance();
+        dataServer.addCommunicationEventListener(this, AbstractDataType.DATA_TYPE_SCREEN_PICTURE);
 	}
 	
 	@Override
@@ -150,10 +146,10 @@ import java.util.List;
 	}
 
 	@Override
-	public void screenPictureEvent(HScreenPiture screenPiture) {
+	public void screenPictureEvent(byte[] data) {
 		Message message = new Message();
 		message.arg1 = SCREEN_PICTURE;
-		message.obj = screenPiture;
+		message.obj = data;
 		messageHandler.sendMessage(message);
 	}
 
@@ -170,7 +166,7 @@ import java.util.List;
 					serverEventHandler((HServerEvent)msg.obj);
 					break;
 				case SCREEN_PICTURE:
-					screenPictureShow((HScreenPiture)msg.obj);
+					screenPictureShow((byte[])msg.obj);
 					break;
 				default:
 					break;
@@ -193,58 +189,19 @@ import java.util.List;
 		}
 	}
 
-	private void screenPictureShow(HScreenPiture screenPiture) {
-		Bitmap screenPicture = BitmapFactory.decodeByteArray(screenPiture.bytesData.getData(), 0, screenPiture.bytesData.getDataSize());
+	private void screenPictureShow(byte[] data) {
+		//Bitmap screenPicture = BitmapFactory.decodeByteArray(screenPiture.bytesData.getData(), 0, screenPiture.bytesData.getDataSize());
 		//BitmapDrawable drawable = new BitmapDrawable(getApplicationContext().getResources(), screenPicture);
 		//touchPanelView.
 		//touchPanelView.setImageDrawable(drawable);
 		//touchPanelView.setImageBitmap(screenPicture);
+		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data);
+		InputStreamReader inputStreamReader = new InputStreamReader(byteArrayInputStream);
 
-
-		String file =  getFilesDir().getPath();
-		File filePath = new File(file + "/temp.bmp");
-		Log.d(CRAActivity.TAG, "write picture to file" + filePath.getPath());
-		try {
-
-			if (!filePath.exists())
-				filePath.createNewFile();
-			FileOutputStream fileOutputStream = new FileOutputStream(filePath);
-			fileOutputStream.write(screenPiture.bytesData.getData());
-			fileOutputStream.flush();
-			fileOutputStream.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-	}
-
-	public List<String> getExtSDCardPath()
-	{
-		List<String> lResult = new ArrayList<String>();
-		try {
-			Runtime rt = Runtime.getRuntime();
-			Process proc = rt.exec("mount");
-			InputStream is = proc.getInputStream();
-			InputStreamReader isr = new InputStreamReader(is);
-			BufferedReader br = new BufferedReader(isr);
-			String line;
-			while ((line = br.readLine()) != null) {
-				if (line.contains("extSdCard"))
-				{
-					String [] arr = line.split(" ");
-					String path = arr[1];
-					File file = new File(path);
-					if (file.isDirectory())
-					{
-						lResult.add(path);
-					}
-				}
-			}
-			isr.close();
-		} catch (Exception e) {
-		}
-		return lResult;
+		Bitmap screenPicture = BitmapFactory.decodeByteArray(data, 0, data.length);
+		//ImageReader imageReader = ImageReader.newInstance();
+		//imageReader.
+        Log.i(CRAActivity.TAG, "[MouseActivity]refresh a picture");
+		touchPanelView.setImageBitmap(screenPicture);
 	}
 }

@@ -1,4 +1,4 @@
-package cn.hisdar.cr.communication;
+package cn.hisdar.cr.screen;
 
 import java.awt.Point;
 

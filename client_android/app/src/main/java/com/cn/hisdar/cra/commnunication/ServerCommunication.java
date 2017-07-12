@@ -1,4 +1,4 @@
-package com.cn.hisdar.cra.server;
+package com.cn.hisdar.cra.commnunication;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
@@ -9,6 +9,8 @@ import android.view.MotionEvent;
 import com.cn.hisdar.cra.MotionEventTool;
 import com.cn.hisdar.cra.activity.CRAActivity;
 import com.cn.hisdar.cra.common.Global;
+import com.cn.hisdar.cra.server.CmdServerReader;
+import com.cn.hisdar.cra.server.ds.DataServer;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -36,7 +38,7 @@ public class ServerCommunication extends Thread {
 	private String currentIpAddress = null;
 	
 	private CmdServerReader cmdServerReader = null;
-	private DataServerReader dataServerReader = null;
+	private DataServer dataServer = null;
 	
 	private ServerCommunication() {		
 		start();
@@ -250,8 +252,8 @@ public class ServerCommunication extends Thread {
 			cmdServerReader = new CmdServerReader(cmdSocket);
 			cmdServerReader.startServerReader();
 
-			dataServerReader = new DataServerReader(dataSocket);
-			dataServerReader.startServerReader();
+			dataServer = DataServer.getInstance();
+			dataServer.initDataServer(dataSocket);
 			
 		} catch (UnknownHostException e) {
 			Log.e(CRAActivity.TAG, "connect to server fail:" + e.getMessage().toString());

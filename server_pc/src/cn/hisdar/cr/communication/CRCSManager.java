@@ -1,10 +1,18 @@
 package cn.hisdar.cr.communication;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Date;
 
+import javax.imageio.ImageIO;
+
+import cn.hisdar.cr.screen.ScreenHunterListener;
+import cn.hisdar.cr.screen.ScreenHunterServer;
+import cn.hisdar.cr.screen.ServerEventListener;
+import cn.hisdar.lib.adapter.MathAdapter;
 import cn.hisdar.lib.log.HLog;
 
 /***
@@ -16,7 +24,10 @@ import cn.hisdar.lib.log.HLog;
  * @author Hisdar
  *
  */
-public class CRCSManager implements ServerEventListener, ClientEventListener {
+public class CRCSManager implements
+	ServerEventListener,
+	ClientEventListener,
+	ScreenHunterListener {
 
 	private static final int MIN_SOCKET_PORT = 5299;
 	private static final int MAX_SOCKET_PORT = 65535;
@@ -68,6 +79,9 @@ public class CRCSManager implements ServerEventListener, ClientEventListener {
 		
 		cmdServer.startServer();
 		dataServer.startServer();
+		
+		ScreenHunterServer screenHunterServer = ScreenHunterServer.getInstance();
+		//screenHunterServer.addScreenHunterListener(this);
 	}
 	
 	public CRServer getCmdServer() {
@@ -135,6 +149,7 @@ public class CRCSManager implements ServerEventListener, ClientEventListener {
 			crClient = new CRClient();
 		}
 		
+		socketClients.add(crClient);
 		if (crServer == cmdServer) {
 			crClient.setCmdSocket(socket);
 		} else if (crServer == dataServer) {
@@ -144,8 +159,7 @@ public class CRCSManager implements ServerEventListener, ClientEventListener {
 			return;
 		}
 
-		Thread remoteClientThread = new Thread(crClient);
-		remoteClientThread.start();
+		crClient.startClient();
 		crClient.addClientDisconnectListener(this);
 	}
 
@@ -206,6 +220,27 @@ public class CRCSManager implements ServerEventListener, ClientEventListener {
 	private void notifyServerStateEvent(CRServer crServer, int serverState) {
 		for (ServerEventListener l : serverEventListeners) {
 			l.serverStateEvent(crServer, serverState);
+		}
+	}
+
+	@Override
+	public void screenPictureChangeEvent(ScreenPictureData screenHunterData) {
+		ByteArrayOutputStream baStream = new ByteArrayOutputStream();
+		try {
+			// write data type
+			baStream.write(MathAdapter.intToBytes(screenHunterData.getDataType()));
+			
+			// write data
+			ImageIO.write(screenHunterData.getScreenImage(), "png", baStream);
+		} catch (IOException e) {
+			HLog.el(e.getMessage());
+			HLog.el(e);
+			return;
+		}
+		
+		for (CRClient crClient : socketClients) {
+			HLog.il("send screen data to:" + crClient.getCmdSocket().getInetAddress().getHostAddress());
+			crClient.sendData(baStream.toByteArray());
 		}
 	}
 }

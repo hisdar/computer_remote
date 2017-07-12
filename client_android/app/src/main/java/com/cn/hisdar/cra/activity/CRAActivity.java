@@ -23,7 +23,7 @@ import android.widget.TextView;
 
 import com.cn.hisdar.cra.R;
 import com.cn.hisdar.cra.lib.configuration.HConfig;
-import com.cn.hisdar.cra.server.ServerCommunication;
+import com.cn.hisdar.cra.commnunication.ServerCommunication;
 import com.cn.hisdar.cra.server.ServerInformation;
 import com.cn.hisdar.cra.server.ServerSearcher;
 import com.cn.hisdar.cra.server.ServerSearcherEventListener;
@@ -38,7 +38,7 @@ import java.util.ArrayList;
 public class CRAActivity extends AppCompatActivity
         implements View.OnClickListener, ServerSearcherEventListener {
 
-    public static final String TAG = "ComputerRemote";
+    public static final String TAG = "CR";
     public static final int MOUSE_CONTROL_ACTIVITY_CODE = 5299;
     public static final int KEYBOARD_CONTROL_ACTIVITY_CODE = 5300;
     private static final CharSequence MESSAGE_SEARCHING_SERVER = "正在搜索服务器......";

@@ -109,6 +109,8 @@ public class ServerSearcher {
 			}
 		}
 
+		Log.i(CRAActivity.TAG, "searchedCount=" + searchedCount);
+		Log.i(CRAActivity.TAG, "ipCount=" + ipCount);
 		if (searchedCount < ipCount) {
 			if (serchIp > ipAddress) {
 				// ֹͣ����С�ķ�����ɢ����������ķ�����ɢ
@@ -134,6 +136,10 @@ public class ServerSearcher {
 	
 					searchedCount += 1;
 				}
+			}
+
+			for (int i = 0; i < ipListArrayList.size(); i++) {
+				Log.i(CRAActivity.TAG, "Serch ip:" + ipListArrayList.get(i));
 			}
 			
 			for (int i = 0; i < ipListArrayList.size(); i++) {

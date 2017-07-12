@@ -18,7 +18,7 @@ import android.widget.EditText;
 import com.cn.hisdar.cra.R;
 import com.cn.hisdar.cra.lib.configuration.ConfigItem;
 import com.cn.hisdar.cra.lib.configuration.HConfig;
-import com.cn.hisdar.cra.server.ServerCommunication;
+import com.cn.hisdar.cra.commnunication.ServerCommunication;
 
 @SuppressLint("NewApi") public class InputServerAddressActivity extends Activity
 implements OnClickListener {

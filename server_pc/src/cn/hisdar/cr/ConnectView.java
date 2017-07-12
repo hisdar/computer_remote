@@ -17,7 +17,7 @@ import cn.hisdar.cr.communication.CRCSManager;
 import cn.hisdar.cr.communication.CRClient;
 import cn.hisdar.cr.communication.CRServer;
 import cn.hisdar.cr.communication.ClientEventListener;
-import cn.hisdar.cr.communication.ServerEventListener;
+import cn.hisdar.cr.screen.ServerEventListener;
 import cn.hisdar.lib.commandline.CommandLineAdapter;
 import cn.hisdar.lib.configuration.ConfigItem;
 import cn.hisdar.lib.configuration.HConfig;

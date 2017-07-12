@@ -5,7 +5,6 @@ import android.util.Log;
 import com.cn.hisdar.cra.activity.CRAActivity;
 import com.cn.hisdar.cra.common.Global;
 import com.cn.hisdar.cra.server.BytesData;
-import com.cn.hisdar.cra.server.HScreenPictureListener;
 import com.cn.hisdar.cra.server.HScreenPiture;
 
 import org.w3c.dom.Document;
@@ -28,14 +27,12 @@ public class EventDispatcher {
 
 	private ArrayList<HResponseDataListener> responseDataListeners;
 	private ArrayList<HServerEventListener> serverEventListeners;
-	private ArrayList<HScreenPictureListener> screenPictureListeners;
 
 	private static boolean isPrint = true;
 	
 	public EventDispatcher() {
 		responseDataListeners = new ArrayList<HResponseDataListener>();
 		serverEventListeners = new ArrayList<HServerEventListener>();
-		screenPictureListeners = new ArrayList<HScreenPictureListener>();
 	}
 	
 	public static EventDispatcher getInstance() {
@@ -117,7 +114,7 @@ public class EventDispatcher {
 			if (bytesData == null) {
 				Log.e(CRAActivity.TAG, "paser server event fail, data is:\n" + eventData.eventData );
 			} else {
-				notifyScreenPictureEvent(new HScreenPiture(bytesData));
+				//notifyScreenPictureEvent(new HScreenPiture(bytesData));
 			}
 		} else {
 			Log.i(CRAActivity.TAG, "unhandle event:\n" + eventData.eventData);
@@ -255,32 +252,6 @@ public class EventDispatcher {
 	private void notifyHServerEvent(HServerEvent serverEvent) {
 		for (int i = 0; i < serverEventListeners.size(); i++) {
 			serverEventListeners.get(i).serverEvent(serverEvent);
-		}
-	}
-
-
-	public void addScreenPictureEventListener(HScreenPictureListener l) {
-		for (int i = 0; i < screenPictureListeners.size(); i++) {
-			if (screenPictureListeners.get(i) == l) {
-				return;
-			}
-		}
-
-		screenPictureListeners.add(l);
-	}
-
-	public void removeScreenPictureEventListener(HScreenPictureListener l) {
-		for (int i = 0; i < screenPictureListeners.size(); i++) {
-			if (screenPictureListeners.get(i) == l) {
-				screenPictureListeners.remove(i);
-				return ;
-			}
-		}
-	}
-
-	private void notifyScreenPictureEvent(HScreenPiture screenPiture) {
-		for (int i = 0; i < screenPictureListeners.size(); i++) {
-			screenPictureListeners.get(i).screenPictureEvent(screenPiture);
 		}
 	}
 }
