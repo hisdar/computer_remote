@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Date;
 
 import javax.imageio.ImageIO;
 
@@ -225,22 +224,10 @@ public class CRCSManager implements
 
 	@Override
 	public void screenPictureChangeEvent(ScreenPictureData screenHunterData) {
-		ByteArrayOutputStream baStream = new ByteArrayOutputStream();
-		try {
-			// write data type
-			baStream.write(MathAdapter.intToBytes(screenHunterData.getDataType()));
-			
-			// write data
-			ImageIO.write(screenHunterData.getScreenImage(), "png", baStream);
-		} catch (IOException e) {
-			HLog.el(e.getMessage());
-			HLog.el(e);
-			return;
-		}
-		
+
 		for (CRClient crClient : socketClients) {
 			HLog.il("send screen data to:" + crClient.getCmdSocket().getInetAddress().getHostAddress());
-			crClient.sendData(baStream.toByteArray());
+			crClient.sendData(screenHunterData);
 		}
 	}
 }

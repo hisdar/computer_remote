@@ -2,8 +2,6 @@ package cn.hisdar.cr.communication;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -20,8 +18,6 @@ import cn.hisdar.computerremote.common.Global;
 import cn.hisdar.cr.debug.DebugerTimeDataContainer;
 import cn.hisdar.cr.event.EventDispatcher;
 import cn.hisdar.cr.event.HEventData;
-import cn.hisdar.cr.screen.ScreenHunterListener;
-import cn.hisdar.cr.screen.ScreenHunterServer;
 import cn.hisdar.lib.adapter.MathAdapter;
 import cn.hisdar.lib.log.HLog;
 
@@ -257,9 +253,10 @@ public class CRClient extends Thread {
 		return true;
 	}
 	
-	public boolean sendData(byte[] data) {
+	public boolean sendData(AbstractDataType data) {
 		
 		if (dataSocket == null) {
+			HLog.el("dataSocket is null");
 			return false;
 		}
 		
@@ -270,20 +267,19 @@ public class CRClient extends Thread {
 			out.write(MathAdapter.longToBytes((new Date()).getTime()));
 			out.flush();
 			
-			// 1.write data length to client, the length is 8, sizeof(long)
-			byte[] dataLength = MathAdapter.intToBytes(data.length);
-			
-			for (int i = 0; i < dataLength.length; i++) {
-				HLog.il("datalen=" + dataLength[i]);
-			}
-			
-			HLog.i("Data size=" + data.length);
-			
+			// write data type 
+			out.write(MathAdapter.intToBytes(data.getDataType()));
+			out.flush();
+
+			// write data length to client, the length is 4, sizeof(int)
+			byte[] bytesData = data.encode();
+			HLog.el("bytesDAta write");
+			byte[] dataLength = MathAdapter.intToBytes(bytesData.length);
 			out.write(dataLength);
 			out.flush();
 
 			// 2.write data to client
-			out.write(data);
+			out.write(bytesData);
 			out.flush();
 		} catch (IOException e) {
 			HLog.el("client ip address:\n" + cmdSocket.getInetAddress().getHostAddress());

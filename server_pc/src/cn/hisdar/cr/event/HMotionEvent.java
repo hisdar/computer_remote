@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import cn.hisdar.lib.adapter.IntegerAdapter;
 import cn.hisdar.lib.adapter.LongAdapter;
+import cn.hisdar.lib.log.HLog;
 
 public class HMotionEvent {
 
@@ -218,19 +219,19 @@ public class HMotionEvent {
 	}
 	
 	public float getX(int index) {
-		if (pointers.size() - 1 <= index) {
-			pointers.get(index).getX();
+		if (pointers.size() > index) {
+			return pointers.get(index).getX();
+		} else {
+			return -1;
 		}
-		
-		return -1;
 	}
 	
 	public float getY(int index) {
-		if (pointers.size() - 1 <= index) {
-			pointers.get(index).getY();
+		if (pointers.size() > index) {
+			return pointers.get(index).getY();
+		} else {
+			return -1;
 		}
-		
-		return -1;
 	}
 	
 	@Override

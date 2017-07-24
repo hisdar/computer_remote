@@ -3,9 +3,6 @@ package com.cn.hisdar.cra.commnunication;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import android.view.MotionEvent;
-
-import com.cn.hisdar.cra.common.Global;
 
 /**
  * Created by Hisdar on 2017/7/22.
@@ -13,13 +10,13 @@ import com.cn.hisdar.cra.common.Global;
 
 public class MotionEventData extends AbstractDataType {
 
-    public MotionEvent motionEvent = null;
+    public HMotionEvent motionEvent = null;
 
-    public void setMotionEvent(MotionEvent motionEvent) {
+    public void setMotionEvent(HMotionEvent motionEvent) {
         this.motionEvent = motionEvent;
     }
 
-    public MotionEvent getMotionEvent() {
+    public HMotionEvent getMotionEvent() {
         return motionEvent;
     }
 
@@ -32,41 +29,24 @@ public class MotionEventData extends AbstractDataType {
     public byte[] encode() throws IOException {
 
         ByteArrayOutputStream byOut = new ByteArrayOutputStream();
-        int action = motionEvent.getAction();
-        int actionIndex = motionEvent.getActionIndex();
-        int buttonState = motionEvent.getButtonState();
-        int metaState = motionEvent.getMetaState();
-        int flags = motionEvent.getFlags();
-        int edgeFlags = motionEvent.getEdgeFlags();
-        int pointCount = motionEvent.getPointerCount();
-        int historySize = motionEvent.getHistorySize();
-        long eventTime = motionEvent.getEventTime();
-        long downTime = motionEvent.getDownTime();
-        int deviceId = motionEvent.getDeviceId();
-        int source = motionEvent.getSource();
 
-        byOut.write(intToBytes(action));
-        byOut.write(intToBytes(actionIndex));
-        byOut.write(intToBytes(buttonState));
-        byOut.write(intToBytes(metaState));
-        byOut.write(intToBytes(flags));
-        byOut.write(intToBytes(edgeFlags));
-        byOut.write(intToBytes(pointCount));
-        byOut.write(intToBytes(historySize));
-        byOut.write(longToBytes(eventTime));
-        byOut.write(longToBytes(downTime));
-        byOut.write(intToBytes(deviceId));
-        byOut.write(intToBytes(source));
+        byOut.write(intToBytes(motionEvent.getAction()));
+        byOut.write(intToBytes(motionEvent.getActionIndex()));
+        byOut.write(intToBytes(motionEvent.getButtonState()));
+        byOut.write(intToBytes(motionEvent.getMetaState()));
+        byOut.write(intToBytes(motionEvent.getFlags()));
+        byOut.write(intToBytes(motionEvent.getEdgeFlags()));
+        byOut.write(intToBytes(motionEvent.getPointerCount()));
+        byOut.write(intToBytes(motionEvent.getHistorySize()));
+        byOut.write(longToBytes(motionEvent.getEventTime()));
+        byOut.write(longToBytes(motionEvent.getDownTime()));
+        byOut.write(intToBytes(motionEvent.getDeviceId()));
+        byOut.write(intToBytes(motionEvent.getSource()));
 
         for (int i = 0; i < motionEvent.getPointerCount(); i++) {
-
-            float x = motionEvent.getX(i);
-            float y = motionEvent.getY(i);
-            int toolType = motionEvent.getToolType(i);
-
-            byOut.write(intToBytes((int)x));
-            byOut.write(intToBytes((int)y));
-            byOut.write(intToBytes(toolType));
+            byOut.write(intToBytes((int)motionEvent.getX(i)));
+            byOut.write(intToBytes((int)motionEvent.getY(i)));
+            byOut.write(intToBytes(motionEvent.getToolType(i)));
         }
 
         return byOut.toByteArray();
@@ -79,50 +59,50 @@ public class MotionEventData extends AbstractDataType {
         byte[] longBytes = new byte[8];
 
         byIn.read(intBytes, 0, 4);
-        int action = bytesToInt(intBytes);
+        motionEvent.setAction(bytesToInt(intBytes));
 
         byIn.read(intBytes, 0, 4);
-        int actionIndex = bytesToInt(intBytes);
+        motionEvent.setActionIndex(bytesToInt(intBytes));
 
         byIn.read(intBytes, 0, 4);
-        int buttonState = bytesToInt(intBytes);
+        motionEvent.setButtonState(bytesToInt(intBytes));
 
         byIn.read(intBytes, 0, 4);
-        int metaState = bytesToInt(intBytes);
+        motionEvent.setMetaState(bytesToInt(intBytes));
 
         byIn.read(intBytes, 0, 4);
-        int flags = bytesToInt(intBytes);
+        motionEvent.setFlags(bytesToInt(intBytes));
 
         byIn.read(intBytes, 0, 4);
-        int edgeFlags = bytesToInt(intBytes);
+        motionEvent.setEdgeFlags(bytesToInt(intBytes));
 
         byIn.read(intBytes, 0, 4);
-        int pointCount = bytesToInt(intBytes);
+        motionEvent.setPointerCount(bytesToInt(intBytes));
 
         byIn.read(intBytes, 0, 4);
-        int historySize = bytesToInt(intBytes);
+        motionEvent.setHistorySize(bytesToInt(intBytes));
 
         byIn.read(longBytes, 0, 8);
-        long eventTime = bytesToLong(longBytes);
+        motionEvent.setEventTime(bytesToLong(longBytes));
 
         byIn.read(longBytes, 0, 8);
-        long downTime = bytesToLong(longBytes);
+        motionEvent.setDownTime(bytesToLong(longBytes));
 
         byIn.read(intBytes, 0, 4);
-        int deviceId = bytesToInt(intBytes);
+        motionEvent.setDeviceId(bytesToInt(intBytes));
 
         byIn.read(intBytes, 0, 4);
-        int source = bytesToInt(intBytes);
+        motionEvent.setSource(bytesToInt(intBytes));
 
-        for (int i = 0; i < pointCount; i++) {
+        for (int i = 0; i < motionEvent.getPointerCount(); i++) {
             byIn.read(intBytes, 0, 4);
-            int x = bytesToInt(intBytes);
-
-            byIn.read(intBytes, 0, 4);
-            int y = bytesToInt(intBytes);
+            motionEvent.setX(i, bytesToInt(intBytes));
 
             byIn.read(intBytes, 0, 4);
-            int toolType = bytesToInt(intBytes);
+            motionEvent.setY(i, bytesToInt(intBytes));
+
+            byIn.read(intBytes, 0, 4);
+            motionEvent.setToolType(i, bytesToInt(intBytes));
         }
 
         return true;

@@ -5,10 +5,10 @@ import cn.hisdar.lib.adapter.IntegerAdapter;
 
 public class Pointer {
 
-	public int id;
-	public float x;
-	public float y;
-	public String toolType;
+	private int id;
+	private float x;
+	private float y;
+	private String toolType;
 	
 	public Pointer() {
 		

@@ -13,6 +13,11 @@ public class ScreenSizeData extends AbstractDataType {
     public int screenWidth = 0;
     public int screenHeight = 0;
 
+    public ScreenSizeData(int widht, int height) {
+        this.screenHeight = height;
+        this.screenWidth = widht;
+    }
+
     public int getScreenWidth() {
         return screenWidth;
     }

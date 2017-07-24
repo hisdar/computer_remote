@@ -2,20 +2,18 @@ package cn.hisdar.cr.communication;
 
 import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
+import cn.hisdar.lib.log.HLog;
 
 public class ScreenPictureData extends AbstractDataType {
 
 	private BufferedImage screenImage;
 	private Point mouseLocation;
-	public byte[] screenPictureData = null;
-
-    public void setScreenPictureData(byte[] data) {
-        screenPictureData = data;
-    }
-
-    public byte[] getScreenPictureData() {
-        return screenPictureData;
-    }
 
     @Override
     public int getDataType() {
@@ -24,12 +22,28 @@ public class ScreenPictureData extends AbstractDataType {
 
     @Override
     public byte[] encode() {
-        return screenPictureData;
+    	ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    	
+    	try {
+			ImageIO.write(screenImage, "png", byteArrayOutputStream);
+		} catch (IOException e) {
+			HLog.el(e);
+			return null;
+		}
+    	
+        return byteArrayOutputStream.toByteArray();
     }
 
     @Override
     public boolean decode(byte[] data) {
-        screenPictureData = data;
+    	ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data);
+    	try {
+			screenImage = ImageIO.read(byteArrayInputStream);
+		} catch (IOException e) {
+			HLog.el(e);
+			return false;
+		}
+    	
         return true;
     }
 

@@ -7,7 +7,6 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -21,11 +20,12 @@ import com.cn.hisdar.cra.HResponseDataListener;
 import com.cn.hisdar.cra.HServerEvent;
 import com.cn.hisdar.cra.HServerEventListener;
 import com.cn.hisdar.cra.R;
-import com.cn.hisdar.cra.common.Global;
 import com.cn.hisdar.cra.commnunication.AbstractDataType;
+import com.cn.hisdar.cra.commnunication.ScreenSizeData;
 import com.cn.hisdar.cra.commnunication.ServerCommunication;
-import com.cn.hisdar.cra.server.ds.DataServer;
+import com.cn.hisdar.cra.common.Global;
 import com.cn.hisdar.cra.server.ds.CommunicationEventListener;
+import com.cn.hisdar.cra.server.ds.DataServer;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
@@ -73,8 +73,12 @@ import java.io.InputStreamReader;
 
         DataServer dataServer = DataServer.getInstance();
         dataServer.addCommunicationEventListener(this, AbstractDataType.DATA_TYPE_SCREEN_PICTURE);
+
+		//sendScreenSize();
 	}
-	
+
+
+
 	@Override
 	public boolean onTouch(View arg0, MotionEvent arg1) {
 		
@@ -153,6 +157,14 @@ import java.io.InputStreamReader;
 		messageHandler.sendMessage(message);
 	}
 
+	private boolean sendScreenSize() {
+		int height = touchPanelView.getHeight();
+		int width = touchPanelView.getWidth();
+
+		ScreenSizeData screenSizeData = new ScreenSizeData(width, height);
+		return DataServer.getInstance().sendData(screenSizeData);
+	}
+
 	private class MessageHandler extends Handler {
 
 		@Override
@@ -180,7 +192,6 @@ import java.io.InputStreamReader;
 	private void showResponseData(HResponseData responseData) {
 		long delayTime = responseData.readTime - responseData.sendTime;
 		String responseDataString = "延时：" + delayTime + "ms";
-		//touchPanelView.setText(responseDataString);
 	}
 	
 	private void serverEventHandler(HServerEvent serverEvent) {
@@ -190,18 +201,11 @@ import java.io.InputStreamReader;
 	}
 
 	private void screenPictureShow(byte[] data) {
-		//Bitmap screenPicture = BitmapFactory.decodeByteArray(screenPiture.bytesData.getData(), 0, screenPiture.bytesData.getDataSize());
-		//BitmapDrawable drawable = new BitmapDrawable(getApplicationContext().getResources(), screenPicture);
-		//touchPanelView.
-		//touchPanelView.setImageDrawable(drawable);
-		//touchPanelView.setImageBitmap(screenPicture);
 		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data);
 		InputStreamReader inputStreamReader = new InputStreamReader(byteArrayInputStream);
 
 		Bitmap screenPicture = BitmapFactory.decodeByteArray(data, 0, data.length);
-		//ImageReader imageReader = ImageReader.newInstance();
-		//imageReader.
-        Log.i(CRAActivity.TAG, "[MouseActivity]refresh a picture");
+        //Log.i(CRAActivity.TAG, "[MouseActivity]refresh a picture");
 		touchPanelView.setImageBitmap(screenPicture);
 	}
 }

@@ -22,16 +22,39 @@ public class MouseControler implements HMotionEventListener, HMouseEventListener
 	private HMotionEvent downEvent = null;
 	private HMotionEvent upEvent = null;
 	
+	// multi finger action check
+	private boolean isSiginFinger = true;
+	
 	public MouseControler() {
 		motionEvents = new ArrayList<>();
 	}
 
 	@Override
 	public void motionEvent(HMotionEvent event) {
-
+		
 		switch (event.action) {
 		case HMotionEvent.ACTION_MOVE:
+			
+			if (event.getPointerCount() > 1) {
+				isSiginFinger = false;
+				break;
+			} else {
+				
+				// multi finger change to single finger, and jump this event
+				if (!isSiginFinger) {
+					isSiginFinger = true;
+					lastEvent = event;
+					break;
+				}
+			}
+
 			if (lastEvent == null) {
+				HLog.dl("last event is null");
+				break;
+			}
+			
+			if (event.getPointers().get(0).getId() != lastEvent.getPointers().get(0).getId()) {
+				HLog.dl("not the same finger");
 				break;
 			}
 			
@@ -42,7 +65,7 @@ public class MouseControler implements HMotionEventListener, HMouseEventListener
 				HLog.dl("x=" + x + ", y=" + y);
 				
 				HLog.dl("last:" + lastEvent.toString());
-				//break;
+				break;
 			}
 			
 			mouseMove((int)(x), (int)(y));
@@ -71,11 +94,11 @@ public class MouseControler implements HMotionEventListener, HMouseEventListener
 		}
 		
 		if (upEvent.getEventTime() - downEvent.getEventTime() < 500) {
-			float downX = downEvent.getPointers().get(0).x;
-			float downY = downEvent.getPointers().get(0).y;
+			float downX = downEvent.getPointers().get(0).getX();
+			float downY = downEvent.getPointers().get(0).getY();
 			
-			float upX = upEvent.getPointers().get(0).x;
-			float upY = upEvent.getPointers().get(0).y;
+			float upX = upEvent.getPointers().get(0).getX();
+			float upY = upEvent.getPointers().get(0).getY();
 			
 			float distanceX = upX - downX;
 			float distanceY = upY - downY;

@@ -3,18 +3,19 @@ package com.cn.hisdar.cra.server.ds;
 import android.util.Log;
 
 import com.cn.hisdar.cra.activity.CRAActivity;
+import com.cn.hisdar.cra.commnunication.AbstractDataType;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Created by Hisdar on 2017/7/10.
  */
 
-public class DataServer extends Thread {
+public class DataServer {
 
     private static DataServer dataServer = null;
     private ArrayList<ListenerAndType> screenPictureListeners = null;
@@ -80,6 +81,41 @@ public class DataServer extends Thread {
 
     public void removeCommunicationEventListener(CommunicationEventListener l) {
         screenPictureListeners.remove(l);
+    }
+
+    public boolean sendData(AbstractDataType data) {
+
+        if (dataSocket == null) {
+            return false;
+        }
+
+        try {
+            OutputStream out = dataSocket.getOutputStream();
+
+            // write send time
+            out.write(data.longToBytes(System.currentTimeMillis()));
+            out.flush();
+
+            // write data type
+            out.write(data.intToBytes(data.getDataType()));
+
+            // write data length to client, the length is 4, sizeof(int)
+            byte[] bytesData = data.encode();
+
+            byte[] dataLength = data.intToBytes(bytesData.length);
+            out.write(dataLength);
+            out.flush();
+
+            // 2.write data to client
+            out.write(bytesData);
+            out.flush();
+        } catch (IOException e) {
+            //Log.e("client ip address:\n" + dataSocket.getInetAddress().getHostAddress());
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 
     private class ListenerAndType {
@@ -169,19 +205,22 @@ public class DataServer extends Thread {
                 Log.i(CRAActivity.TAG, "[DataServer] is running");
                 try {
 
+                    // read send time
                     byte[] dataTimeByte = readData(inputStream, 8);
                     long dataTime = bytesToLong(dataTimeByte);
 
-                    byte[] dataLenByte = readData(inputStream, 4);
-                    int dataLen = bytesToInt(dataLenByte);
-                    Log.i(CRAActivity.TAG, "[DataServer]dataLen=" + dataLen);
-
+                    // read data type
                     byte[] dataTypeByte = readData(inputStream, 4);
                     int dataType = bytesToInt(dataTypeByte);
                     Log.i(CRAActivity.TAG, "[DataServer]dataType=" + dataType);
 
+                    // read data length
+                    byte[] dataLenByte = readData(inputStream, 4);
+                    int dataLen = bytesToInt(dataLenByte);
+                    Log.i(CRAActivity.TAG, "[DataServer]dataLen=" + dataLen);
+
                     // read data
-                    byte[] dataBuf = readData(inputStream, dataLen - 4);
+                    byte[] dataBuf = readData(inputStream, dataLen);
 
                     // notify data
                     dispatch(dataBuf, dataType);
