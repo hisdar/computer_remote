@@ -142,6 +142,79 @@ public class ScreenHunterServer implements HMotionEventListener, GestureListener
        return result;
     }
     
+    private Rectangle getScreenPictureRect(Point centerPoint) {
+    	// 1. 根据手机的分辨率比例，屏幕的尺寸，算出一个尺寸，这个尺寸的比例是手机屏幕的比例，这个尺寸的图片可以完整放下电脑屏幕的图片
+    	// get picture size
+		// 用电脑的屏幕尺寸，通过手机的分辨率计算，取小的一边
+		int phoneScreenWidth = 1080;
+		int phoneScreenHeight = 1920;
+		double phoneScreenRate = 1.0 * phoneScreenHeight / phoneScreenWidth;
+
+		int pcScreenWidth = 1280;
+		int pcScreenHeight = 800;
+		
+		int imageWidth = pcScreenWidth;
+		int imageHeight = (int)(imageWidth * phoneScreenRate);
+
+		if (imageHeight < pcScreenHeight) {
+			imageHeight = pcScreenHeight;
+			imageWidth = (int)(imageHeight / phoneScreenRate);
+		}
+    	
+    	// 根据放大系数，再次计算图像尺寸
+		int enlargeSize = (int)(pinchSize * 10 * 2);
+		
+		imageWidth = imageWidth - enlargeSize;
+		imageWidth = imageWidth < 0 ? (10 * 2) : imageWidth;
+		
+		//imageHeight = imageHeight - (int)(enlargeSize * phoneScreenRate);
+		imageHeight = (int)(imageWidth * phoneScreenRate);
+		imageHeight = imageHeight < 0 ? (10 * 2) : imageHeight;
+
+    	
+		HLog.dl("enlargeSize=" + enlargeSize + ", phoneScreenRate" + phoneScreenRate);
+		HLog.dl("imageWidth=" + imageWidth + ", imageHeight=" + imageHeight);
+		
+		// 根据中心点和图片只存，计算图片的起始位置和结束为止
+		int startX = centerPoint.x - imageWidth / 2;
+		int startY = centerPoint.y - imageHeight / 2;
+		
+		HLog.dl("startX=" + startX + ", startY=" + startY);
+		
+		startX = startX < 0 ? 0 : startX;
+		startY = startY < 0 ? 0 : startY;
+		int endX = startX + imageWidth;
+		int endY = startY + imageHeight;
+		
+		HLog.dl("startX=" + startX + ", startY=" + startY);
+		HLog.dl("endX=" + endX + ", endY=" + endY);
+		
+		// 当要截取的图片尺寸超出了源图片的尺寸的时候，进行平移调整
+		if (endX > pcScreenWidth) {
+			int backX = endX - pcScreenWidth;
+			backX = backX > startX ? startX : backX;
+			startX -= backX;
+			endX = startX + imageWidth;
+		}
+		
+		if (endY > pcScreenHeight) {
+			int backY = endY - pcScreenHeight;
+			backY = backY > startY ? startY : backY;
+			startY -= backY;
+			endY = startY + imageHeight;
+		}
+		
+		HLog.dl("startX=" + startX + ", startY=" + startY);
+		HLog.dl("endX=" + endX + ", endY=" + endY);
+		
+		// 如果 还是超出源图片尺寸，就按照原图片尺寸来
+		endX = endX > pcScreenWidth ? pcScreenWidth : endX;
+		endY = endY > pcScreenHeight ? pcScreenHeight : endY;
+		
+		Rectangle rectangle = new Rectangle(startX, startY, endX - startX, endY - startY);
+		return rectangle;
+    }
+    
     public ScreenPictureData getScreenHunterData() {
     	int screenWidth = ((int)java.awt.Toolkit.getDefaultToolkit().getScreenSize().width);
 		int screenHeight = ((int)java.awt.Toolkit.getDefaultToolkit().getScreenSize().height); 
@@ -149,47 +222,26 @@ public class ScreenHunterServer implements HMotionEventListener, GestureListener
 		BufferedImage screenImage = getScreenShot(0, 0, screenWidth, screenHeight);
 		Point point = MouseInfo.getPointerInfo().getLocation();
 		
-		Graphics graphics = screenImage.getGraphics();
-		graphics.setColor(Color.RED);
-		graphics.drawOval(point.x - 50, point.y - 50, 100, 100);
+		Graphics g = screenImage.getGraphics();
 		
-		// get picture size
-		int imageHeight = 1920 - (int)(pinchSize * 10 * 2);
-		int imageWidth = 1080 - (int)(pinchSize * 10 * 2);
+		g.setColor(Color.RED);
+		int[] xPoints = {point.x, point.x + 30, point.x + 15, point.x + 15};
+		int[] yPoints = {point.y, point.y + 15, point.y + 15, point.y + 30};
+		g.fillPolygon(xPoints, yPoints, 4);
 		
-		imageHeight = imageHeight > screenImage.getHeight() ? screenImage.getHeight() : imageHeight;
-		imageWidth = imageWidth > screenImage.getWidth() ? screenImage.getWidth() : imageWidth;
+		g.setColor(Color.BLACK);
+		g.drawLine(point.x, point.y, point.x + 30, point.y + 15);
+		g.drawLine(point.x, point.y, point.x + 15, point.y + 30);
 		
-		// get start index and end index
-		int startX = point.x - imageWidth / 2;
-		int startY = point.y - imageHeight / 2;
+		g.drawLine(point.x + 15, point.y + 30, point.x + 15, point.y + 15);
+		g.drawLine(point.x + 30, point.y + 15, point.x + 15, point.y + 15);
 		
-		int endX = startX + imageWidth;
-		int endY = startY + imageHeight;
+		g.setColor(Color.GRAY);
+		g.drawLine(point.x, point.y, point.x + 15, point.y + 15);
 		
-		if (startX < 0) {
-			startX = 0;
-			endX = imageWidth;
-		}
-		
-		if (startY < 0) {
-			startY = 0;
-			endY = imageHeight;
-		}
-		
-		if (endX > screenImage.getWidth()) {
-			endX = screenImage.getWidth();
-			startX = endX - imageWidth;
-		}
-		
-		if (endY > screenImage.getHeight()) {
-			endY = screenImage.getHeight();
-			startY = endY - imageHeight;
-		}
-		
-		HLog.il("x=" + startX + ", y=" + startY + ",width=" + screenWidth + ",height=" + screenHeight);
-		
-		//screenImage = crop(screenImage, startX, startY, imageWidth, imageHeight);
+		Rectangle rect = getScreenPictureRect(point);
+		HLog.il(rect);
+		screenImage = crop(screenImage, rect.x, rect.y, rect.width, rect.height);
 		
 		ScreenPictureData screenHunterData = new ScreenPictureData();
 		screenHunterData.setScreenImage(screenImage);
