@@ -1,4 +1,4 @@
-package cn.hisdar.cr.communication;
+package cn.hisdar.cr.communication.handler;
 
 import cn.hisdar.computerremote.common.Global;
 import cn.hisdar.lib.log.HLog;

@@ -1,54 +1,53 @@
-package com.cn.hisdar.cra.commnunication;
+package cn.hisdar.cr.communication.data;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
-/**
- * Created by Hisdar on 2017/7/22.
- */
+import cn.hisdar.cr.communication.handler.HMotionEvent;
 
-public class MotionEventData extends AbstractDataType {
+public class MotionEventData extends AbstractData {
 
-    public HMotionEvent motionEvent = null;
+	private HMotionEvent motionEvent = null;
+	
+	public HMotionEvent getMotionEvent() {
+		return motionEvent;
+	}
 
-    public void setMotionEvent(HMotionEvent motionEvent) {
-        this.motionEvent = motionEvent;
-    }
+	public void setMotionEvent(HMotionEvent motionEvent) {
+		this.motionEvent = motionEvent;
+	}
 
-    public HMotionEvent getMotionEvent() {
-        return motionEvent;
-    }
+	@Override
+	public int getDataType() {
+		return DATA_TYPE_MOTION_EVENT;
+	}
 
-    @Override
-    public int getDataType() {
-        return 0;
-    }
-
-    @Override
-    public byte[] encode() throws IOException {
+	@Override
+    public byte[] encode() {
 
         ByteArrayOutputStream byOut = new ByteArrayOutputStream();
-
-        byOut.write(intToBytes(motionEvent.getAction()));
-        byOut.write(intToBytes(motionEvent.getActionIndex()));
-        byOut.write(intToBytes(motionEvent.getButtonState()));
-        byOut.write(intToBytes(motionEvent.getMetaState()));
-        byOut.write(intToBytes(motionEvent.getFlags()));
-        byOut.write(intToBytes(motionEvent.getEdgeFlags()));
-        byOut.write(intToBytes(motionEvent.getPointerCount()));
-        byOut.write(intToBytes(motionEvent.getHistorySize()));
-        byOut.write(longToBytes(motionEvent.getEventTime()));
-        byOut.write(longToBytes(motionEvent.getDownTime()));
-        byOut.write(intToBytes(motionEvent.getDeviceId()));
-        byOut.write(intToBytes(motionEvent.getSource()));
-
-        for (int i = 0; i < motionEvent.getPointerCount(); i++) {
-            byOut.write(intToBytes((int)motionEvent.getX(i)));
-            byOut.write(intToBytes((int)motionEvent.getY(i)));
-            byOut.write(intToBytes(motionEvent.getToolType(i)));
-        }
-
+		try {
+	        byOut.write(intToBytes(motionEvent.getAction()));
+	        byOut.write(intToBytes(motionEvent.getActionIndex()));
+	        byOut.write(intToBytes(motionEvent.getButtonState()));
+	        byOut.write(intToBytes(motionEvent.getMetaState()));
+	        byOut.write(intToBytes(motionEvent.getFlags()));
+	        byOut.write(intToBytes(motionEvent.getEdgeFlags()));
+	        byOut.write(intToBytes(motionEvent.getPointerCount()));
+	        byOut.write(intToBytes(motionEvent.getHistorySize()));
+	        byOut.write(longToBytes(motionEvent.getEventTime()));
+	        byOut.write(longToBytes(motionEvent.getDownTime()));
+	        byOut.write(intToBytes(motionEvent.getDeviceId()));
+	        byOut.write(intToBytes(motionEvent.getSource()));
+	
+	        for (int i = 0; i < motionEvent.getPointerCount(); i++) {
+	            byOut.write(intToBytes((int)motionEvent.getX(i)));
+	            byOut.write(intToBytes((int)motionEvent.getY(i)));
+	            byOut.write(intToBytes(motionEvent.getToolType(i)));
+	        }
+		} catch (Exception e) {
+			
+		}
         return byOut.toByteArray();
     }
 
@@ -104,7 +103,9 @@ public class MotionEventData extends AbstractDataType {
             byIn.read(intBytes, 0, 4);
             motionEvent.setToolType(i, bytesToInt(intBytes));
         }
-
+        
         return true;
     }
+
+	
 }

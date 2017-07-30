@@ -1,9 +1,9 @@
-package com.cn.hisdar.cra.server.ds;
+package cn.hisdar.cr.communication;
 
 import android.util.Log;
 
 import com.cn.hisdar.cra.activity.CRAActivity;
-import com.cn.hisdar.cra.commnunication.AbstractDataType;
+import com.cn.hisdar.cra.server.ds.CommunicationEventListener;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,22 +15,22 @@ import java.util.ArrayList;
  * Created by Hisdar on 2017/7/10.
  */
 
-public class DataServer {
+public class CRClient {
 
-    private static DataServer dataServer = null;
+    private static CRClient dataServer = null;
     private ArrayList<ListenerAndType> screenPictureListeners = null;
     private Socket dataSocket;
     private DataServerReader dataServerReader = null;
 
-    private DataServer() {
+    private CRClient() {
         screenPictureListeners = new ArrayList<>();
     }
 
-    public static DataServer getInstance() {
+    public static CRClient getInstance() {
         if (dataServer == null) {
-            synchronized (DataServer.class) {
+            synchronized (CRClient.class) {
                 if (dataServer == null) {
-                    dataServer = new DataServer();
+                    dataServer = new CRClient();
                 }
             }
         }
@@ -83,40 +83,7 @@ public class DataServer {
         screenPictureListeners.remove(l);
     }
 
-    public boolean sendData(AbstractDataType data) {
-
-        if (dataSocket == null) {
-            return false;
-        }
-
-        try {
-            OutputStream out = dataSocket.getOutputStream();
-
-            // write send time
-            out.write(data.longToBytes(System.currentTimeMillis()));
-            out.flush();
-
-            // write data type
-            out.write(data.intToBytes(data.getDataType()));
-
-            // write data length to client, the length is 4, sizeof(int)
-            byte[] bytesData = data.encode();
-
-            byte[] dataLength = data.intToBytes(bytesData.length);
-            out.write(dataLength);
-            out.flush();
-
-            // 2.write data to client
-            out.write(bytesData);
-            out.flush();
-        } catch (IOException e) {
-            //Log.e("client ip address:\n" + dataSocket.getInetAddress().getHostAddress());
-            e.printStackTrace();
-            return false;
-        }
-
-        return true;
-    }
+    
 
     private class ListenerAndType {
         public CommunicationEventListener listener;
@@ -137,6 +104,40 @@ public class DataServer {
         }
     }
 
+    public boolean sendData(AbstractDataHandler data) {
+
+        if (dataSocket == null) {
+            return false;
+        }
+
+        try {
+            OutputStream out = dataSocket.getOutputStream();
+
+            // write send time
+            out.write(data.longToBytes(System.currentTimeMillis()));
+            out.flush();
+
+            // write data type
+            out.write(data.intToBytes(data.getDataType()));
+            out.flush();
+
+            // write data length to client, the length is 4, sizeof(int)
+            byte[] bytesData = data.encode();
+
+            byte[] dataLength = data.intToBytes(bytesData.length);
+            out.write(dataLength);
+            out.flush();
+
+            // 2.write data to client
+            out.write(bytesData);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
     private class DataServerReader extends Thread {
 
         private boolean isStop = false;
@@ -202,7 +203,7 @@ public class DataServer {
             // read the data length
             while (!isStop) {
 
-                Log.i(CRAActivity.TAG, "[DataServer] is running");
+                Log.i(CRAActivity.TAG, "[CRClient] is running");
                 try {
 
                     // read send time
@@ -212,12 +213,12 @@ public class DataServer {
                     // read data type
                     byte[] dataTypeByte = readData(inputStream, 4);
                     int dataType = bytesToInt(dataTypeByte);
-                    Log.i(CRAActivity.TAG, "[DataServer]dataType=" + dataType);
+                    Log.i(CRAActivity.TAG, "[CRClient]dataType=" + dataType);
 
                     // read data length
                     byte[] dataLenByte = readData(inputStream, 4);
                     int dataLen = bytesToInt(dataLenByte);
-                    Log.i(CRAActivity.TAG, "[DataServer]dataLen=" + dataLen);
+                    Log.i(CRAActivity.TAG, "[CRClient]dataLen=" + dataLen);
 
                     // read data
                     byte[] dataBuf = readData(inputStream, dataLen);

@@ -1,10 +1,10 @@
-package com.cn.hisdar.cra.commnunication;
+package cn.hisdar.cr.communication;
 
 /**
  * Created by Hisdar on 2017/7/22.
  */
 
-public class ScreenPictureData extends AbstractDataType {
+public class ScreenPictureHandler extends AbstractDataHandler {
 
     public byte[] screenPictureData = null;
 

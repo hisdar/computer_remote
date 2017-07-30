@@ -1,10 +1,11 @@
-package cn.hisdar.cr.communication;
+package cn.hisdar.cr.communication.handler;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import cn.hisdar.cr.communication.socket.SocketIOManager;
 import cn.hisdar.cr.screen.ServerEventListener;
 import cn.hisdar.lib.log.HLog;
 import cn.hisdar.lib.net.HInetAddress;
@@ -88,7 +89,8 @@ public class CRServer {
 				return;
 			}
 			
-			serverEventListener.serverStateEvent(crServer, SERVER_STATE_START);
+			if (serverEventListener != null)
+				serverEventListener.serverStateEvent(crServer, SERVER_STATE_START);
 			
 			String[] hostAddresses = HInetAddress.getInetAddresses();
 			for (int i = 0; i < hostAddresses.length; i++) {
@@ -99,14 +101,15 @@ public class CRServer {
 				try {
 					Socket clientSocket = serverSocket.accept();
 					clientSockets.add(clientSocket);
-					serverEventListener.clientConnectEvent(crServer, clientSocket);					
+					SocketIOManager.getInstance().addSocket(clientSocket);
+					//serverEventListener.clientConnectEvent(crServer, clientSocket);					
 				} catch (IOException e) {
 					HLog.el(e);
 					break;
 				}
 			}
 
-			serverEventListener.serverStateEvent(crServer, SERVER_STATE_STOP);
+			//serverEventListener.serverStateEvent(crServer, SERVER_STATE_STOP);
 		}
 	}
 }

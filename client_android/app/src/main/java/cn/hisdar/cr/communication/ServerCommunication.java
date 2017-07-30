@@ -1,4 +1,4 @@
-package com.cn.hisdar.cra.commnunication;
+package cn.hisdar.cr.communication;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
@@ -10,11 +10,13 @@ import com.cn.hisdar.cra.MotionEventTool;
 import com.cn.hisdar.cra.activity.CRAActivity;
 import com.cn.hisdar.cra.common.Global;
 import com.cn.hisdar.cra.server.CmdServerReader;
-import com.cn.hisdar.cra.server.ds.DataServer;
 
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+
+import cn.hisdar.cr.communication.socket.SocketIO;
+import cn.hisdar.cr.communication.socket.SocketIOManager;
 
 @SuppressLint("HandlerLeak")
 public class ServerCommunication extends Thread {
@@ -38,7 +40,7 @@ public class ServerCommunication extends Thread {
 	private String currentIpAddress = null;
 	
 	private CmdServerReader cmdServerReader = null;
-	private DataServer dataServer = null;
+	private CRClient dataServer = null;
 	
 	private ServerCommunication() {		
 		start();
@@ -93,7 +95,11 @@ public class ServerCommunication extends Thread {
 		String data = message.getData().getString(EVENT_DATA);
 		
 		data = Global.DATA_BEGIN_FLAG + "\n" + data + "\n" + Global.DATA_END_FLAG + "\n";
-		
+
+//		CommonHandler commonData = new CommonHandler();
+//		commonData.setData(data.getBytes());
+//		CRClient.getInstance().sendData(commonData);
+
 		//Log.i(ComputerRemoteServerActivity.TAG, data);
 		if (cmdSocket == null) {
 			Log.e(CRAActivity.TAG, "communicationSocket is null");
@@ -221,39 +227,41 @@ public class ServerCommunication extends Thread {
 	private boolean connectToServerEventHandler(Message messsage) {
 		
 		String ipAddress = messageToHandle.getData().getString(IP_ADDRESS);
-		int cmdPort = messageToHandle.getData().getInt(CMD_SERVER_PORT);
-		int dataPort = messageToHandle.getData().getInt(DATA_SERVER_PORT);
+		//int cmdPort = messageToHandle.getData().getInt(CMD_SERVER_PORT);
+		int dataPort = messageToHandle.getData().getInt(CMD_SERVER_PORT);
 		
 		// if socket is connect, check is this is the target connection
-		if (cmdSocket != null && cmdSocket.isConnected()) {
+		if (dataSocket != null && dataSocket.isConnected()) {
 			
 			if (currentIpAddress.equals(ipAddress)) {
 				Log.e(CRAActivity.TAG, "connection already on");
 				return true;
 			} else {
 				try {
-					cmdSocket.close();
+					dataSocket.close();
 				} catch (IOException e) {
 					Log.e(CRAActivity.TAG, "close connection fail:" + e.getMessage());
 				}
 
-				cmdSocket = null;
+				dataSocket = null;
 			}
 		}
 		
 		// if not connect, connect to server
 		try {
-			cmdSocket = new Socket(ipAddress, cmdPort);
+
 			dataSocket = new Socket(ipAddress, dataPort);
 			currentIpAddress = cmdSocket.getInetAddress().getHostAddress();
 			Log.e(CRAActivity.TAG, "connect to server success:");
 			
 			// start thread to read server message
-			cmdServerReader = new CmdServerReader(cmdSocket);
-			cmdServerReader.startServerReader();
+//			cmdServerReader = new CmdServerReader(cmdSocket);
+//			cmdServerReader.startServerReader();
+//
+//			dataServer = CRClient.getInstance();
+//			dataServer.initDataServer(dataSocket);
 
-			dataServer = DataServer.getInstance();
-			dataServer.initDataServer(dataSocket);
+			SocketIOManager.getInstance().addSocket(dataSocket);
 			
 		} catch (UnknownHostException e) {
 			Log.e(CRAActivity.TAG, "connect to server fail:" + e.getMessage().toString());

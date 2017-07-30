@@ -10,21 +10,19 @@ import java.awt.Robot;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
-import cn.hisdar.cr.communication.CRCSManager;
-import cn.hisdar.cr.communication.ScreenPictureData;
+import cn.hisdar.cr.communication.handler.ScreenPictureHandler;
 import cn.hisdar.cr.controler.GestureListener;
 import cn.hisdar.cr.controler.GestureParser;
 import cn.hisdar.cr.event.EventDispatcher;
 import cn.hisdar.cr.event.HMotionEvent;
 import cn.hisdar.cr.event.HMotionEventListener;
-import cn.hisdar.lib.log.HLog;
 
 public class ScreenHunterServer implements HMotionEventListener, GestureListener {
 
 	private static ScreenHunterServer screenHunterServer = null;
 	private ArrayList<ScreenHunterListener> listeners = null;
 	private ScreenHunterThread screenHunterThread = null;
-	private boolean isStop = false;
+
 
 	private boolean sendFlag = false;
 	private Thread screenPictureSendThread = null;
@@ -75,7 +73,6 @@ public class ScreenHunterServer implements HMotionEventListener, GestureListener
 	
 	public void startServer() {
 		if (screenHunterThread == null) {
-			isStop = false;
 			screenHunterThread = new ScreenHunterThread();
 			screenHunterThread.start();
 		} else {
@@ -85,7 +82,6 @@ public class ScreenHunterServer implements HMotionEventListener, GestureListener
 	
 	public void stopServer() {
 		if (screenHunterThread != null) {
-			isStop = true;
 			screenHunterServer = null;
 		}
 	}
@@ -161,33 +157,35 @@ public class ScreenHunterServer implements HMotionEventListener, GestureListener
 			imageWidth = (int)(imageHeight / phoneScreenRate);
 		}
     	
+		int pice = 5 * 2;
+		
     	// 根据放大系数，再次计算图像尺寸
-		int enlargeSize = (int)(pinchSize * 10 * 2);
+		int enlargeSize = (int)(pinchSize * pice);
 		
 		imageWidth = imageWidth - enlargeSize;
-		imageWidth = imageWidth < 0 ? (10 * 2) : imageWidth;
+		imageWidth = imageWidth < 0 ? (pice) : imageWidth;
 		
 		//imageHeight = imageHeight - (int)(enlargeSize * phoneScreenRate);
 		imageHeight = (int)(imageWidth * phoneScreenRate);
-		imageHeight = imageHeight < 0 ? (10 * 2) : imageHeight;
+		imageHeight = imageHeight < 0 ? (pice) : imageHeight;
 
     	
-		HLog.dl("enlargeSize=" + enlargeSize + ", phoneScreenRate" + phoneScreenRate);
-		HLog.dl("imageWidth=" + imageWidth + ", imageHeight=" + imageHeight);
+		//HLog.dl("enlargeSize=" + enlargeSize + ", phoneScreenRate" + phoneScreenRate);
+		//HLog.dl("imageWidth=" + imageWidth + ", imageHeight=" + imageHeight);
 		
 		// 根据中心点和图片只存，计算图片的起始位置和结束为止
 		int startX = centerPoint.x - imageWidth / 2;
 		int startY = centerPoint.y - imageHeight / 2;
 		
-		HLog.dl("startX=" + startX + ", startY=" + startY);
+		//HLog.dl("startX=" + startX + ", startY=" + startY);
 		
 		startX = startX < 0 ? 0 : startX;
 		startY = startY < 0 ? 0 : startY;
 		int endX = startX + imageWidth;
 		int endY = startY + imageHeight;
 		
-		HLog.dl("startX=" + startX + ", startY=" + startY);
-		HLog.dl("endX=" + endX + ", endY=" + endY);
+		//HLog.dl("startX=" + startX + ", startY=" + startY);
+		//HLog.dl("endX=" + endX + ", endY=" + endY);
 		
 		// 当要截取的图片尺寸超出了源图片的尺寸的时候，进行平移调整
 		if (endX > pcScreenWidth) {
@@ -204,8 +202,8 @@ public class ScreenHunterServer implements HMotionEventListener, GestureListener
 			endY = startY + imageHeight;
 		}
 		
-		HLog.dl("startX=" + startX + ", startY=" + startY);
-		HLog.dl("endX=" + endX + ", endY=" + endY);
+		//HLog.dl("startX=" + startX + ", startY=" + startY);
+		//HLog.dl("endX=" + endX + ", endY=" + endY);
 		
 		// 如果 还是超出源图片尺寸，就按照原图片尺寸来
 		endX = endX > pcScreenWidth ? pcScreenWidth : endX;
@@ -215,7 +213,7 @@ public class ScreenHunterServer implements HMotionEventListener, GestureListener
 		return rectangle;
     }
     
-    public ScreenPictureData getScreenHunterData() {
+    public ScreenPictureHandler getScreenHunterData() {
     	int screenWidth = ((int)java.awt.Toolkit.getDefaultToolkit().getScreenSize().width);
 		int screenHeight = ((int)java.awt.Toolkit.getDefaultToolkit().getScreenSize().height); 
 		
@@ -240,10 +238,10 @@ public class ScreenHunterServer implements HMotionEventListener, GestureListener
 		g.drawLine(point.x, point.y, point.x + 15, point.y + 15);
 		
 		Rectangle rect = getScreenPictureRect(point);
-		HLog.il(rect);
+		//HLog.il(rect);
 		screenImage = crop(screenImage, rect.x, rect.y, rect.width, rect.height);
 		
-		ScreenPictureData screenHunterData = new ScreenPictureData();
+		ScreenPictureHandler screenHunterData = new ScreenPictureHandler();
 		screenHunterData.setScreenImage(screenImage);
 		screenHunterData.setMouseLocation(point);
 		
@@ -253,24 +251,7 @@ public class ScreenHunterServer implements HMotionEventListener, GestureListener
 	private class ScreenHunterThread extends Thread {
 		
 		public void run() {
-			
-			HLog.il("ScreenHunterThread start");
-			
-//			while (!isStop) {
-//				
-//				ScreenPictureData screenHunterData = getScreenHunterData();
-//				for (int i = 0; i < listeners.size(); i++) {
-//					listeners.get(i).screenPictureChangeEvent(screenHunterData);
-//				}
-//				
-//				try {
-//					sleep(100);
-//				} catch (InterruptedException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//			}
-			HLog.il("ScreenHunterThread exit");
+
 		}
 	}
 
@@ -303,12 +284,11 @@ public class ScreenHunterServer implements HMotionEventListener, GestureListener
 			while (sendFlag == true) {
 				sendFlag = false;
 				
-				ScreenPictureData shData = ScreenHunterServer.getInstance().getScreenHunterData();
-				CRCSManager.getInstance().screenPictureChangeEvent(shData);
+				ScreenPictureHandler shData = ScreenHunterServer.getInstance().getScreenHunterData();
+				//CRCSManager.getInstance().screenPictureChangeEvent(shData);
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}

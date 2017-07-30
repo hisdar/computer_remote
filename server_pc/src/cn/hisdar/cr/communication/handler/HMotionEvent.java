@@ -1,4 +1,4 @@
-package com.cn.hisdar.cra.commnunication;
+package cn.hisdar.cr.communication.handler;
 
 import java.util.ArrayList;
 
@@ -21,7 +21,7 @@ public class HMotionEvent {
     public int source;
 
     private ArrayList<HPoint> points;
-
+    
     public HMotionEvent() {
         points = new ArrayList<>();
     }

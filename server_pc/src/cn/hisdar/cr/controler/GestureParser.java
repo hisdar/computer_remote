@@ -22,8 +22,8 @@ public class GestureParser implements HMotionEventListener {
 		distances = new ArrayList<>();
 		gestureListeners = new ArrayList<>();
 		
-		EventDispatcher eventDispatcher = EventDispatcher.getInstance();
-		eventDispatcher.addHMotionEventListener(this);
+		//EventDispatcher eventDispatcher = EventDispatcher.getInstance();
+		//eventDispatcher.addHMotionEventListener(this);
 	}
 	
 	public static GestureParser getInstance() {

@@ -11,15 +11,10 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
-import org.omg.CORBA.PRIVATE_MEMBER;
-
 import cn.hisdar.computerremote.common.Global;
-import cn.hisdar.cr.communication.CRCSManager;
-import cn.hisdar.cr.communication.CRServer;
+import cn.hisdar.cr.communication.handler.CRServer;
 import cn.hisdar.cr.setting.ComputerRemoteSettingDialog;
 import cn.hisdar.lib.configuration.HConfig;
-import cn.hisdar.lib.ui.HSplitPane;
-import cn.hisdar.lib.ui.TitlePanel;
 import cn.hisdar.lib.ui.UIAdapter;
 
 public class ServerControlerView extends JPanel implements ActionListener {
@@ -47,7 +42,7 @@ public class ServerControlerView extends JPanel implements ActionListener {
 	public ServerControlerView() {
 		
 		applicationConfig = HConfig.getInstance(Global.APPLICATION_CONFIG_FILE);
-		computerRemoteServer = CRCSManager.getInstance().getCmdServer();
+		computerRemoteServer = new CRServer(5299);
 		
 		setOpaque(true);
 		setBackground(new Color(0xbcc7d8));

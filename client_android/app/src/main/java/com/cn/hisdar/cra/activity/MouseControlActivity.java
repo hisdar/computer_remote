@@ -20,12 +20,17 @@ import com.cn.hisdar.cra.HResponseDataListener;
 import com.cn.hisdar.cra.HServerEvent;
 import com.cn.hisdar.cra.HServerEventListener;
 import com.cn.hisdar.cra.R;
-import com.cn.hisdar.cra.commnunication.AbstractDataType;
-import com.cn.hisdar.cra.commnunication.ScreenSizeData;
-import com.cn.hisdar.cra.commnunication.ServerCommunication;
+import cn.hisdar.cr.communication.AbstractDataHandler;
+import cn.hisdar.cr.communication.handler.HMotionEvent;
+import cn.hisdar.cr.communication.MotionEventHandler;
+import cn.hisdar.cr.communication.ScreenSizeHandler;
+import cn.hisdar.cr.communication.ServerCommunication;
 import com.cn.hisdar.cra.common.Global;
+import cn.hisdar.cr.communication.CRClient;
+import cn.hisdar.cr.communication.data.MotionEventData;
+import cn.hisdar.cr.communication.socket.SocketIOManager;
+
 import com.cn.hisdar.cra.server.ds.CommunicationEventListener;
-import com.cn.hisdar.cra.server.ds.DataServer;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
@@ -71,8 +76,8 @@ import java.io.InputStreamReader;
 		eventDispatcher.addHResponseDataListener(this);
 		eventDispatcher.addHServerEventListener(this);
 
-        DataServer dataServer = DataServer.getInstance();
-        dataServer.addCommunicationEventListener(this, AbstractDataType.DATA_TYPE_SCREEN_PICTURE);
+        CRClient dataServer = CRClient.getInstance();
+        dataServer.addCommunicationEventListener(this, AbstractDataHandler.DATA_TYPE_SCREEN_PICTURE);
 
 		//sendScreenSize();
 	}
@@ -129,8 +134,32 @@ import java.io.InputStreamReader;
 	}
 
 	private void touchPanelViewTouchEventHandler(MotionEvent e) {
-		
-		ServerCommunication.getInstance().sendTouchEvent(getMainLooper().getThread(), e);
+
+		HMotionEvent hMotionEvent = new HMotionEvent();
+		hMotionEvent.setAction(e.getAction());
+		hMotionEvent.setActionIndex(e.getActionIndex());
+		hMotionEvent.setButtonState(e.getButtonState());
+		hMotionEvent.setDeviceId(e.getDeviceId());
+		hMotionEvent.setDownTime(e.getDownTime());
+		hMotionEvent.setEdgeFlags(e.getEdgeFlags());
+		hMotionEvent.setEventTime(e.getEventTime());
+		hMotionEvent.setFlags(e.getFlags());
+		hMotionEvent.setHistorySize(e.getHistorySize());
+		hMotionEvent.setMetaState(e.getMetaState());
+		hMotionEvent.setSource(e.getSource());
+
+		for (int i = 0; i < e.getPointerCount(); i++) {
+			hMotionEvent.setToolType(i, e.getToolType(i));
+			hMotionEvent.setX(i, e.getX(i));
+			hMotionEvent.setY(i, e.getY(i));
+		}
+
+		MotionEventData motionEventData = new MotionEventData();
+		motionEventData.setMotionEvent(hMotionEvent);
+		//CRClient.getInstance().sendData(motionEventData);
+		SocketIOManager.getInstance().sendDataToClient(motionEventData, null);
+
+		//ServerCommunication.getInstance().sendTouchEvent(getMainLooper().getThread(), e);
 	}
 
 	@Override
@@ -161,8 +190,8 @@ import java.io.InputStreamReader;
 		int height = touchPanelView.getHeight();
 		int width = touchPanelView.getWidth();
 
-		ScreenSizeData screenSizeData = new ScreenSizeData(width, height);
-		return DataServer.getInstance().sendData(screenSizeData);
+		ScreenSizeHandler screenSizeData = new ScreenSizeHandler(width, height);
+		return CRClient.getInstance().sendData(screenSizeData);
 	}
 
 	private class MessageHandler extends Handler {

@@ -1,4 +1,4 @@
-package cn.hisdar.cr.communication;
+package cn.hisdar.cr.communication.handler;
 
 import java.awt.Point;
 import java.awt.image.BufferedImage;
@@ -10,7 +10,7 @@ import javax.imageio.ImageIO;
 
 import cn.hisdar.lib.log.HLog;
 
-public class ScreenPictureData extends AbstractDataType {
+public class ScreenPictureHandler extends AbstractDataHandler {
 
 	private BufferedImage screenImage;
 	private Point mouseLocation;
@@ -20,7 +20,6 @@ public class ScreenPictureData extends AbstractDataType {
         return DATA_TYPE_SCREEN_PICTURE;
     }
 
-    @Override
     public byte[] encode() {
     	ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     	

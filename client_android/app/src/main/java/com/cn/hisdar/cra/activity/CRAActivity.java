@@ -23,7 +23,7 @@ import android.widget.TextView;
 
 import com.cn.hisdar.cra.R;
 import com.cn.hisdar.cra.lib.configuration.HConfig;
-import com.cn.hisdar.cra.commnunication.ServerCommunication;
+import cn.hisdar.cr.communication.ServerCommunication;
 import com.cn.hisdar.cra.server.ServerInformation;
 import com.cn.hisdar.cra.server.ServerSearcher;
 import com.cn.hisdar.cra.server.ServerSearcherEventListener;
@@ -38,7 +38,7 @@ import java.util.ArrayList;
 public class CRAActivity extends AppCompatActivity
         implements View.OnClickListener, ServerSearcherEventListener {
 
-    public static final String TAG = "CR";
+    public static final String TAG = "Hisdar-CR";
     public static final int MOUSE_CONTROL_ACTIVITY_CODE = 5299;
     public static final int KEYBOARD_CONTROL_ACTIVITY_CODE = 5300;
     private static final CharSequence MESSAGE_SEARCHING_SERVER = "正在搜索服务器......";
@@ -97,7 +97,7 @@ public class CRAActivity extends AppCompatActivity
     @Override
     public void onClick(View arg0) {
         if (arg0.getId() == autoSearchButton.getId()) {
-            //connectToServerButtonActionHandler();
+
             if (autoSearchButton.getText().equals(TEXT_STOP_SEARCH)) {
 
                 serverSearcher.stopSearch();
@@ -110,6 +110,7 @@ public class CRAActivity extends AppCompatActivity
 
                 clearServerList();
 
+                Log.i(CRAActivity.TAG, "start search server");
                 serverSearcher = new ServerSearcher();
                 serverSearcher.addServerSearcherListener(this);
                 serverSearcher.startSearch(getBaseContext());
@@ -117,7 +118,6 @@ public class CRAActivity extends AppCompatActivity
 
         } else if (arg0.getId() == inputAddressButton.getId()) {
             Intent intent = new Intent(CRAActivity.this, InputServerAddressActivity.class);
-            //����Intent��ͨ��ֵ�ķ�ʽ
             intent.putExtra("skip", "MainActivity");
             //��תActivity
             startActivity(intent);

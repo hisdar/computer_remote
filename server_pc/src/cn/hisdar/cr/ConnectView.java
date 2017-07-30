@@ -13,10 +13,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import cn.hisdar.computerremote.common.Global;
-import cn.hisdar.cr.communication.CRCSManager;
-import cn.hisdar.cr.communication.CRClient;
-import cn.hisdar.cr.communication.CRServer;
-import cn.hisdar.cr.communication.ClientEventListener;
+import cn.hisdar.cr.communication.handler.CRServer;
 import cn.hisdar.cr.screen.ServerEventListener;
 import cn.hisdar.lib.commandline.CommandLineAdapter;
 import cn.hisdar.lib.configuration.ConfigItem;
@@ -27,7 +24,7 @@ import cn.hisdar.lib.ui.HLinearPanel;
 import cn.hisdar.lib.ui.TitlePanel;
 import cn.hisdar.lib.ui.output.HKeyValuePanel;
 
-public class ConnectView extends JPanel implements ClientEventListener, ServerEventListener {
+public class ConnectView extends JPanel implements ServerEventListener {
 
 	/**
 	 * 
@@ -76,7 +73,7 @@ public class ConnectView extends JPanel implements ClientEventListener, ServerEv
 		/*CRServer cmdServer = CRServerManager.getInstance().getCmdServer();
 		cmdServer.addClientEventListener(this);
 		cmdServer.addServerEventListener(this);*/
-		CRCSManager.getInstance().addServerEventListener(this);
+		//CRCSManager.getInstance().addServerEventListener(this);
 	}
 	
 	private JPanel getServerInforPanel() {
@@ -112,23 +109,6 @@ public class ConnectView extends JPanel implements ClientEventListener, ServerEv
 		//clientInforPanel.repaint();
 		
 		HLog.il("Finish update ui");
-	}
-
-	@Override
-	public void clientDisconnectEvent(CRClient crClient, Socket socket) {
-		
-		for (int i = 0; i < clientInforPanels.size(); i++) {
-			if (clientInforPanels.get(i).getSocket() == socket) {
-		
-				HLog.il("Client disconnect:" + socket.getInetAddress().getHostAddress());
-				
-				clientInforPanel.removeChild(clientInforPanels.get(i));
-				clientInforPanels.remove(i);
-				
-				clientInforPanel.revalidate();
-				clientInforPanel.repaint();
-			}
-		}
 	}
 
 	@Override

@@ -3,11 +3,9 @@ package cn.hisdar.cr.event;
 import java.awt.Point;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Date;
 
-import javax.print.attribute.standard.RequestingUserName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -19,8 +17,6 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import cn.hisdar.computerremote.common.Global;
-import cn.hisdar.cr.communication.CRClient;
-import cn.hisdar.cr.communication.CRServer;
 import cn.hisdar.cr.screen.ScreenSizeEventListener;
 import cn.hisdar.lib.adapter.IntegerAdapter;
 import cn.hisdar.lib.log.HLog;
@@ -198,7 +194,7 @@ public class EventDispatcher {
 		String serverTimeDataXml = eventData.timeDataContainer.toXmlString();
 		responseDataXml += serverTimeDataXml;
 		
-		eventData.client.sendResponseData(responseDataXml);
+		//eventData.client.sendResponseData(responseDataXml);
 	}
 	
 	private Point parseScreenSize(Node screenSizeNode) {

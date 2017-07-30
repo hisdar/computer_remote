@@ -6,8 +6,7 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
-import cn.hisdar.cr.communication.CRCSManager;
-import cn.hisdar.cr.communication.ScreenPictureData;
+import cn.hisdar.cr.communication.handler.ScreenPictureHandler;
 import cn.hisdar.cr.screen.ScreenHunterServer;
 import cn.hisdar.lib.log.HLog;
 
@@ -22,8 +21,8 @@ public class DebugView extends JPanel implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == sendScreenPicture) {
-			ScreenPictureData shData = ScreenHunterServer.getInstance().getScreenHunterData();
-			CRCSManager.getInstance().screenPictureChangeEvent(shData);
+			ScreenPictureHandler shData = ScreenHunterServer.getInstance().getScreenHunterData();
+			//CRCSManager.getInstance().screenPictureChangeEvent(shData);
 			HLog.il("Send a picture to clients");
 		}
 	}

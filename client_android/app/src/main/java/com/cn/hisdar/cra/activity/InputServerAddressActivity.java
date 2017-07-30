@@ -18,7 +18,7 @@ import android.widget.EditText;
 import com.cn.hisdar.cra.R;
 import com.cn.hisdar.cra.lib.configuration.ConfigItem;
 import com.cn.hisdar.cra.lib.configuration.HConfig;
-import com.cn.hisdar.cra.commnunication.ServerCommunication;
+import cn.hisdar.cr.communication.ServerCommunication;
 
 @SuppressLint("NewApi") public class InputServerAddressActivity extends Activity
 implements OnClickListener {
@@ -78,7 +78,7 @@ implements OnClickListener {
 		// try to connect to server
 		ServerCommunication sc = ServerCommunication.getInstance();
 		sc.disconnect(getMainLooper().getThread(), ipAddress, port);
-		boolean ret = sc.connectToCmdServer(getMainLooper().getThread(), ipAddress, port, 5300);
+		boolean ret = sc.connectToCmdServer(getMainLooper().getThread(), ipAddress, port, 5299);
 		if (!ret) {
 			showMessage("���ӷ�����ʧ��", "��ʾ");
 			return;

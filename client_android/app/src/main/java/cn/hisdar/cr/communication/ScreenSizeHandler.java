@@ -1,4 +1,4 @@
-package com.cn.hisdar.cra.commnunication;
+package cn.hisdar.cr.communication;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -8,12 +8,12 @@ import java.io.IOException;
  * Created by Hisdar on 2017/7/22.
  */
 
-public class ScreenSizeData extends AbstractDataType {
+public class ScreenSizeHandler extends AbstractDataHandler {
 
     public int screenWidth = 0;
     public int screenHeight = 0;
 
-    public ScreenSizeData(int widht, int height) {
+    public ScreenSizeHandler(int widht, int height) {
         this.screenHeight = height;
         this.screenWidth = widht;
     }
@@ -40,13 +40,17 @@ public class ScreenSizeData extends AbstractDataType {
     }
 
     @Override
-    public byte[] encode() throws IOException {
+    public byte[] encode() {
 
-        ByteArrayOutputStream baOut = new ByteArrayOutputStream();
-        baOut.write(intToBytes(screenWidth));
-        baOut.write(intToBytes(screenHeight));
-
-        return baOut.toByteArray();
+        try {
+            ByteArrayOutputStream baOut = new ByteArrayOutputStream();
+            baOut.write(intToBytes(screenWidth));
+            baOut.write(intToBytes(screenHeight));
+            return baOut.toByteArray();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new byte[1];
     }
 
     @Override

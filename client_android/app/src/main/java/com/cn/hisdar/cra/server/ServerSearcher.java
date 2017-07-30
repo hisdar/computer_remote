@@ -57,15 +57,9 @@ public class ServerSearcher {
 		int ipAddress = getIPAddress(context);
 		int netMask = getNetMask(context);
 		int netGate = getNetGate(context);
-		
-		// IP �� ��������ȡ�����IPͷ
+
 		int ipHead = ipAddress & netMask;
-		
-		// IP �ĸ�������ȥһ���㲥��ַ����ȥһ�����ص�ַ����
 		int ipCount = ~netMask;
-		
-		// �㲥��ַ���� IP ͷ �� ���������ȡ ��
-		// �洢�����ε�ʱ���Ƿ��Ŵ�ģ�����Ҫת��һ��
 		int maxIP = ipHead + ipCount;
 		
 //		Log.i(CRAActivity.TAG, "ipAddress=" + getIPAddress(ipAddress));
@@ -74,21 +68,18 @@ public class ServerSearcher {
 //		Log.i(CRAActivity.TAG, "ipHead=" + getIPAddress(ipHead));
 //		Log.i(CRAActivity.TAG, "ipCount=" + ipCount);
 
-		// ����CPU���������滮�����߳�, ���ǵ�����socketͨ�ŵĵȴ�����������һ�����Ĳ�����������£�Ϊÿ�����ķ���16���̣߳�
 		int searchThreadCount = (getCpuCount() - 1) * 16;
 		this.gSserverThreadCount = searchThreadCount;
-		//Log.i(CRAActivity.TAG, "searchThreadCount=" + searchThreadCount);
+		Log.i(CRAActivity.TAG, "searchThreadCount=" + searchThreadCount);
 		
 		ArrayList<ArrayList<Integer>> ipListArrayList = new ArrayList<ArrayList<Integer>>();
 		for (int i = 0; i < gSserverThreadCount; i++) {
 			ipListArrayList.add(new ArrayList<Integer>());
 		}
-		
-		// Ϊÿһ���̷߳���IP, ������ʱ���Ա���IPΪ���ģ���������ɢ
+
 		int serchIp = 0;
 		int searchedCount = 0;
 		for (int i = 0; i < ipCount; i++) {
-			// ż��������ɢ������������ɢ
 			if (i % 2 == 0) {
 				if (ipAddress - (i / 2) <= ipHead) {
 					break;
@@ -104,7 +95,7 @@ public class ServerSearcher {
 			searchedCount += 1;
 			
 			if (serchIp != maxIP && serchIp != netGate && serchIp != ipAddress) {
-				//Log.i(CRAActivity.TAG, "Hisdar ip=" + getIPAddress(serchIp));
+				Log.i(CRAActivity.TAG, "Hisdar ip=" + getIPAddress(serchIp));
 				ipListArrayList.get(i % gSserverThreadCount).add(new Integer(serchIp));
 			}
 		}
@@ -113,7 +104,6 @@ public class ServerSearcher {
 		Log.i(CRAActivity.TAG, "ipCount=" + ipCount);
 		if (searchedCount < ipCount) {
 			if (serchIp > ipAddress) {
-				// ֹͣ����С�ķ�����ɢ����������ķ�����ɢ
 				for (int i = serchIp + 1; i < maxIP; i++) {
 					
 					serchIp += 1;
@@ -125,7 +115,6 @@ public class ServerSearcher {
 					searchedCount += 1;
 				}
 			} else {
-				// ֹͣ�����ķ�����ɢ��������С�ķ�����ɢ
 				for (int i = serchIp - 1; i > ipHead; i--) {
 					
 					serchIp -= 1;
@@ -147,8 +136,7 @@ public class ServerSearcher {
 			}
 		}
 	}
-	
-	// ��Ϊ�����IP��ַ�Ĵ��˳���Ƿ������ģ�Ϊ�˷��������㣬���Խ�˳��ת��һ��
+
 	private int overTurn(int address) {
 		int[] ipArrays = new int[4];
 		for (int i = 0; i < ipArrays.length; i++) {
@@ -194,13 +182,8 @@ public class ServerSearcher {
 	}
 	
 	public int getDefaultNetMask(Context context, int ipAddress) {
-		// A ������
 		int netEndA = 127 << 24 | 255 << 16 | 255 << 8 | 255;
-		
-		// B ������
 		int netEndB = 191 << 24 | 255 << 16 | 255 << 8 | 255;
-		
-		// C ������
 		int netEndC = 223 << 24 | 255 << 16 | 255 << 8 | 255;
 		
 		if (ipAddress >= 0 && ipAddress <= netEndA) {
@@ -213,8 +196,7 @@ public class ServerSearcher {
 			return 255 << 24 | 255 << 16 | 255 << 8 | 0;
 		}
 	}
-	
-	// Ĭ�ϰ���8��������
+
 	public int getCpuCount() {
 		return 4;
 	}
@@ -241,13 +223,12 @@ public class ServerSearcher {
 		
 		public void run() {
 			for (int i = 0; i < ipAddressList.size(); i++) {
-				//Log.i(CRAActivity.TAG, "Search:" + getIPAddress(ipAddressList.get(i)));
+				Log.i(CRAActivity.TAG, "Search:" + getIPAddress(ipAddressList.get(i)));
 				int localIPAddress = getIPAddress(context);
 				int netMask = getNetMask(context);
 				int id = ipAddressList.get(i) - (netMask & localIPAddress);
 				ServerInformation serverInfor = connecteAndGetServerInfor(getIPAddress(ipAddressList.get(i)), id);
-				
-				// ����Ǳ�ǿ��ֹͣ�ģ��Ͳ�Ҫ�ٷ��κ���Ϣ��
+
 				if (isStopSearch) {
 					return;
 				}
@@ -258,7 +239,7 @@ public class ServerSearcher {
 				}
 			}
 			
-			//Log.i(CRAActivity.TAG, "Thread finished:" + get);
+			Log.i(CRAActivity.TAG, "Thread finished:");
 			notifyServerSearchFinishedMessage();
 		}
 		
