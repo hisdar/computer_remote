@@ -43,7 +43,7 @@ public class ServerSearcher {
 	}
 	
 	public void startSearch(Context context) {
-		Log.i(CRAActivity.TAG, "Start to search server.....");
+		//Log.i(CRAActivity.TAG, "Start to search server.....");
 
 		isStopSearch = false;
 		gSserverThreadCount = 0;
@@ -70,7 +70,7 @@ public class ServerSearcher {
 
 		int searchThreadCount = (getCpuCount() - 1) * 16;
 		this.gSserverThreadCount = searchThreadCount;
-		Log.i(CRAActivity.TAG, "searchThreadCount=" + searchThreadCount);
+		//Log.i(CRAActivity.TAG, "searchThreadCount=" + searchThreadCount);
 		
 		ArrayList<ArrayList<Integer>> ipListArrayList = new ArrayList<ArrayList<Integer>>();
 		for (int i = 0; i < gSserverThreadCount; i++) {
@@ -100,8 +100,8 @@ public class ServerSearcher {
 			}
 		}
 
-		Log.i(CRAActivity.TAG, "searchedCount=" + searchedCount);
-		Log.i(CRAActivity.TAG, "ipCount=" + ipCount);
+		//Log.i(CRAActivity.TAG, "searchedCount=" + searchedCount);
+		//Log.i(CRAActivity.TAG, "ipCount=" + ipCount);
 		if (searchedCount < ipCount) {
 			if (serchIp > ipAddress) {
 				for (int i = serchIp + 1; i < maxIP; i++) {
@@ -119,7 +119,7 @@ public class ServerSearcher {
 					
 					serchIp -= 1;
 					if (serchIp != maxIP && serchIp != netGate && serchIp != ipAddress) {
-						Log.i(CRAActivity.TAG, "Hisdar ip=" + getIPAddress(serchIp));
+						//Log.i(CRAActivity.TAG, "Hisdar ip=" + getIPAddress(serchIp));
 						ipListArrayList.get(searchedCount % gSserverThreadCount).add(new Integer(serchIp));
 					}
 	
@@ -128,7 +128,7 @@ public class ServerSearcher {
 			}
 
 			for (int i = 0; i < ipListArrayList.size(); i++) {
-				Log.i(CRAActivity.TAG, "Serch ip:" + ipListArrayList.get(i));
+				//Log.i(CRAActivity.TAG, "Serch ip:" + ipListArrayList.get(i));
 			}
 			
 			for (int i = 0; i < ipListArrayList.size(); i++) {
@@ -239,7 +239,7 @@ public class ServerSearcher {
 				}
 			}
 			
-			Log.i(CRAActivity.TAG, "Thread finished:");
+			//Log.i(CRAActivity.TAG, "Thread finished:");
 			notifyServerSearchFinishedMessage();
 		}
 		
@@ -249,11 +249,13 @@ public class ServerSearcher {
 
 			try {
 				socket = new Socket(ipAddress, DEFAULT_PORT);
-				serverInformation = getServerInformation(socket);
-				serverInformation.setId(id);
+				//serverInformation = getServerInformation(socket);
+				//serverInformation.setId(id);
+				Log.i(CRAActivity.TAG, "create socket success");
+
 				socket.close();
-			} catch (IOException | SAXException | ParserConfigurationException e1 ) {
-				Log.e(CRAActivity.TAG, e1.getMessage());
+			} catch (IOException e1 ) {
+				//Log.e(CRAActivity.TAG, e1.getMessage());
 			}
 			
 			return serverInformation;

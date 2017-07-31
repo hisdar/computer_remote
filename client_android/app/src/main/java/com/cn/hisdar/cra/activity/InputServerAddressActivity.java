@@ -77,6 +77,7 @@ implements OnClickListener {
 		
 		// try to connect to server
 		ServerCommunication sc = ServerCommunication.getInstance();
+
 		sc.disconnect(getMainLooper().getThread(), ipAddress, port);
 		boolean ret = sc.connectToCmdServer(getMainLooper().getThread(), ipAddress, port, 5299);
 		if (!ret) {

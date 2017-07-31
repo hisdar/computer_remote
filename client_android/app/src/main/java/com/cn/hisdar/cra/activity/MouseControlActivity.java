@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -147,6 +148,7 @@ import java.io.InputStreamReader;
 		hMotionEvent.setHistorySize(e.getHistorySize());
 		hMotionEvent.setMetaState(e.getMetaState());
 		hMotionEvent.setSource(e.getSource());
+		hMotionEvent.setPointerCount(e.getPointerCount());
 
 		for (int i = 0; i < e.getPointerCount(); i++) {
 			hMotionEvent.setToolType(i, e.getToolType(i));
@@ -154,6 +156,7 @@ import java.io.InputStreamReader;
 			hMotionEvent.setY(i, e.getY(i));
 		}
 
+		Log.i(CRAActivity.TAG, "send motion event data");
 		MotionEventData motionEventData = new MotionEventData();
 		motionEventData.setMotionEvent(hMotionEvent);
 		//CRClient.getInstance().sendData(motionEventData);

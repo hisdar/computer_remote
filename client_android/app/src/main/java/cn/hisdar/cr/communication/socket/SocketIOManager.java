@@ -1,5 +1,9 @@
 package cn.hisdar.cr.communication.socket;
 
+import android.util.Log;
+
+import com.cn.hisdar.cra.activity.CRAActivity;
+
 import java.net.Socket;
 import java.util.ArrayList;
 
@@ -83,9 +87,10 @@ public class SocketIOManager implements SocketIOEventListener {
 	}
 	
 	public boolean sendDataToClient(AbstractData data, Socket socket) {
+		Log.i(CRAActivity.TAG, "socketISs.size=" + socketIOs.size());
 		for (int i = 0; i < socketIOs.size(); i++) {
 			if (socket == null) {
-
+				Log.i(CRAActivity.TAG, "socket=null");
 			} else {
 				if (socketIOs.get(i).getSocket() == socket) {
 					return socketIOs.get(i).sendData(data);

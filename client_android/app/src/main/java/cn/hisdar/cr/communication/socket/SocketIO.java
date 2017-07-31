@@ -1,5 +1,9 @@
 package cn.hisdar.cr.communication.socket;
 
+import android.util.Log;
+
+import com.cn.hisdar.cra.activity.CRAActivity;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -139,7 +143,8 @@ public class SocketIO {
         }
 
         try {
-            OutputStream out = socket.getOutputStream();
+			Log.i(CRAActivity.TAG, "send data ...");
+			OutputStream out = socket.getOutputStream();
 
             // write send time
             out.write(AbstractDataHandler.longToBytes(System.currentTimeMillis()));

@@ -34,8 +34,7 @@ public class ServerCommunication extends Thread {
 	
 	private Message messageToHandle = null;
 	private Thread messageOwner = null;
-	
-	private Socket cmdSocket = null;
+
 	private Socket dataSocket = null;
 	private String currentIpAddress = null;
 	
@@ -64,12 +63,8 @@ public class ServerCommunication extends Thread {
 				sleep(1000);
 			} catch (InterruptedException e) {
 			}
-			
-			//Log.i(ComputerRemoteServerActivity.TAG, "communicatuin thread");
-			
+
 			if (messageToHandle != null) {
-				//serverCommunicationEventHnadler.sendMessage(messageToHandle);
-				
 				switch (messageToHandle.what) {
 				case CONNECT_TO_SERVER:
 					connectToServerEventHandler(messageToHandle);
@@ -78,7 +73,7 @@ public class ServerCommunication extends Thread {
 					disconnectEventHandler(messageToHandle);
 					break;
 				case SEND_EVENT_DATA:
-					sendCmd(messageToHandle);
+					//sendCmd(messageToHandle);
 					break;
 				default:
 					break;
@@ -89,37 +84,10 @@ public class ServerCommunication extends Thread {
 			} 
 		}
 	}
-	
-	private boolean sendCmd(Message message) {
-		
-		String data = message.getData().getString(EVENT_DATA);
-		
-		data = Global.DATA_BEGIN_FLAG + "\n" + data + "\n" + Global.DATA_END_FLAG + "\n";
 
-//		CommonHandler commonData = new CommonHandler();
-//		commonData.setData(data.getBytes());
-//		CRClient.getInstance().sendData(commonData);
-
-		//Log.i(ComputerRemoteServerActivity.TAG, data);
-		if (cmdSocket == null) {
-			Log.e(CRAActivity.TAG, "communicationSocket is null");
-			return false;
-		}
-		
-		try {
-			cmdSocket.getOutputStream().write(data.getBytes());
-			cmdSocket.getOutputStream().flush();
-		} catch (IOException e) {
-			Log.e(CRAActivity.TAG, "socket send data fail:" + e.getMessage());
-			return false;
-		}
-		
-		return true;
-	}
-	
 	public boolean connectToCmdServer(Thread owner, String ipAddress, int cmd_server_port, int data_server_port) {
 	
-		Log.i(CRAActivity.TAG, "connect to server");
+		Log.i(CRAActivity.TAG, "connect to cmd server");
 		Message connectToServerMessage = new Message();
 		Bundle data = new Bundle();
 		data.putString(IP_ADDRESS, ipAddress);
@@ -225,7 +193,7 @@ public class ServerCommunication extends Thread {
 	 * @return if connect success, return true, otherwise return false
 	 */
 	private boolean connectToServerEventHandler(Message messsage) {
-		
+		Log.i(CRAActivity.TAG, "connectToServerEventHandler");
 		String ipAddress = messageToHandle.getData().getString(IP_ADDRESS);
 		//int cmdPort = messageToHandle.getData().getInt(CMD_SERVER_PORT);
 		int dataPort = messageToHandle.getData().getInt(CMD_SERVER_PORT);
@@ -246,12 +214,12 @@ public class ServerCommunication extends Thread {
 				dataSocket = null;
 			}
 		}
-		
+		Log.i(CRAActivity.TAG, "connectToServerEventHandler: create socket");
 		// if not connect, connect to server
 		try {
 
 			dataSocket = new Socket(ipAddress, dataPort);
-			currentIpAddress = cmdSocket.getInetAddress().getHostAddress();
+			currentIpAddress = dataSocket.getInetAddress().getHostAddress();
 			Log.e(CRAActivity.TAG, "connect to server success:");
 			
 			// start thread to read server message
@@ -260,6 +228,7 @@ public class ServerCommunication extends Thread {
 //
 //			dataServer = CRClient.getInstance();
 //			dataServer.initDataServer(dataSocket);
+
 
 			SocketIOManager.getInstance().addSocket(dataSocket);
 			
@@ -279,17 +248,17 @@ public class ServerCommunication extends Thread {
 		int port = messageToHandle.getData().getInt(CMD_SERVER_PORT);
 		
 		// if socket is connect, check is this is the target connection
-		if (cmdSocket != null && cmdSocket.isConnected()) {
+		if (dataSocket != null && dataSocket.isConnected()) {
 			
 			if (currentIpAddress.equals(ipAddress)) {
 				try {
 					cmdServerReader.stopServerReader();
-					cmdSocket.close();
+					dataSocket.close();
 				} catch (IOException e) {
 					Log.e(CRAActivity.TAG, "close connection fail:" + e.getMessage());
 				}
 
-				cmdSocket = null;
+				dataSocket = null;
 			}
 		}
 	}
