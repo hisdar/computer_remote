@@ -77,13 +77,18 @@ public class SocketIO {
 		    isStop = true;
 		}
 		
-		private byte[] readData(InputStream inputStream, int dataLen) throws IOException {
+		private byte[] readData(InputStream inputStream, int dataLen) {
 		
 		    int offset = 0;
 		    byte[] data = new byte[dataLen];
-		
+		    int readLen = 0;
 		    while (dataLen > 0) {
-		        int readLen = inputStream.read(data, offset, dataLen);
+		    	try {
+		    		readLen = inputStream.read(data, offset, dataLen);
+		    	} catch (IOException e) {
+		    		e.printStackTrace();
+		    	}
+
 		        offset += readLen;
 		        dataLen -= readLen;
 		    }
@@ -106,28 +111,23 @@ public class SocketIO {
 		
 		    // read the data length
 		    while (!isStop) {
-		        try {
-		            // read send time 8 bytes
-		            byte[] dataTimeByte = readData(inputStream, 8);
-		            long dataTime = AbstractDataHandler.bytesToLong(dataTimeByte);
+	            // read send time 8 bytes
+	            byte[] dataTimeByte = readData(inputStream, 8);
+	            long dataTime = AbstractDataHandler.bytesToLong(dataTimeByte);
 
-		            // read data type 4 bytes
-		            byte[] dataTypeByte = readData(inputStream, 4);
-		            int dataType = AbstractDataHandler.bytesToInt(dataTypeByte);
+	            // read data type 4 bytes
+	            byte[] dataTypeByte = readData(inputStream, 4);
+	            int dataType = AbstractDataHandler.bytesToInt(dataTypeByte);
 
-		            // read data length 4 bytes
-		            byte[] dataLenByte = readData(inputStream, 4);
-		            int dataLen = AbstractDataHandler.bytesToInt(dataLenByte);
+	            // read data length 4 bytes
+	            byte[] dataLenByte = readData(inputStream, 4);
+	            int dataLen = AbstractDataHandler.bytesToInt(dataLenByte);
 
-		            // read data
-		            byte[] dataBuf = readData(inputStream, dataLen);
-		
-		            // notify data
-		            dispatch(dataBuf, dataType);
-		        } catch (IOException e) {
-		            e.printStackTrace();
-		            stopServerReader();
-		        }
+	            // read data
+	            byte[] dataBuf = readData(inputStream, dataLen);
+	
+	            // notify data
+	            dispatch(dataBuf, dataType);
 		    }
 		}
 	}

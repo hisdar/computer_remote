@@ -13,8 +13,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import cn.hisdar.computerremote.common.Global;
+import cn.hisdar.cr.communication.client.ClientEventListener;
 import cn.hisdar.cr.communication.handler.CRServer;
-import cn.hisdar.cr.screen.ServerEventListener;
 import cn.hisdar.lib.commandline.CommandLineAdapter;
 import cn.hisdar.lib.configuration.ConfigItem;
 import cn.hisdar.lib.configuration.HConfig;
@@ -24,7 +24,7 @@ import cn.hisdar.lib.ui.HLinearPanel;
 import cn.hisdar.lib.ui.TitlePanel;
 import cn.hisdar.lib.ui.output.HKeyValuePanel;
 
-public class ConnectView extends JPanel implements ServerEventListener {
+public class ConnectView extends JPanel implements ClientEventListener {
 
 	/**
 	 * 
@@ -94,24 +94,6 @@ public class ConnectView extends JPanel implements ServerEventListener {
 		return serverInfoPanel;
 	}
 
-	@Override
-	public void clientConnectEvent(CRServer crServer, Socket socket) {
-		
-		HLog.il("Client connect:" + socket.getInetAddress().getHostAddress());
-		
-		ClientInforPanel currentClientPanel = new ClientInforPanel(socket);
-		HLog.il("Create information panel");
-		
-		currentClientPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-		clientInforPanels.add(currentClientPanel);
-		clientInforPanel.add(currentClientPanel);
-		clientInforPanel.revalidate();
-		//clientInforPanel.repaint();
-		
-		HLog.il("Finish update ui");
-	}
-
-	@Override
 	public void serverStateEvent(CRServer crServer, int serverState) {
 		if (serverState == CRServer.SERVER_STATE_START) {
 			serverStatePanel.setValue("Æô¶¯");
@@ -169,5 +151,21 @@ public class ConnectView extends JPanel implements ServerEventListener {
 					Global.APPLICATION_NAME + "ÏûÏ¢",
 					JOptionPane.INFORMATION_MESSAGE);
 		}
+	}
+
+	@Override
+	public void clientConnectEvent(Socket clientSocket) {
+		HLog.il("Client connect:" + clientSocket.getInetAddress().getHostAddress());
+		
+		ClientInforPanel currentClientPanel = new ClientInforPanel(clientSocket);
+		HLog.il("Create information panel");
+		
+		currentClientPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+		clientInforPanels.add(currentClientPanel);
+		clientInforPanel.add(currentClientPanel);
+		clientInforPanel.revalidate();
+		//clientInforPanel.repaint();
+		
+		HLog.il("Finish update ui");
 	}
 }

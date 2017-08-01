@@ -6,11 +6,6 @@ package cn.hisdar.cr.communication.handler;
 
 public abstract class AbstractDataHandler {
 
-    public static final int DATA_TYPE_SCREEN_PICTURE = 0x10001;
-    public static final int DATA_TYPE_SCREEN_SIZE    = 0x10002;
-    public static final int DATA_TYPE_COMMON_DATA    = 0x10003;
-    public static final int DATA_TYPE_MOTION_EVENT   = 0x10004;
-    
     abstract public int getDataType();
     abstract public boolean decode(byte[] data);
 
@@ -28,7 +23,7 @@ public abstract class AbstractDataHandler {
         // the length of long is 8bytes
         long number = 0;
         for (int i = 0; i < bytesData.length; i++) {
-            number |= (bytesData[i] << (i * 8));
+            number |= ((bytesData[i] & 0xFF) << (i * 8));
         }
 
         return number;
@@ -48,7 +43,7 @@ public abstract class AbstractDataHandler {
         // the length of long is 8bytes
         int number = 0;
         for (int i = 0; i < bytesData.length; i++) {
-            number |= (bytesData[i] << (i * 8));
+            number |= ((bytesData[i] & 0xFF) << (i * 8));
         }
 
         return number;

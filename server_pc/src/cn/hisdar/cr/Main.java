@@ -3,6 +3,7 @@ package cn.hisdar.cr;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import cn.hisdar.cr.communication.handler.MotionEventHandler;
 import cn.hisdar.cr.controler.KeyControler;
 import cn.hisdar.cr.controler.MouseControler;
 import cn.hisdar.cr.event.EventDispatcher;
@@ -62,5 +63,7 @@ public class Main {
 		if (!commandLineAdapter.isCommanded(Main.COMMAND_AUTO_START)) {
 			computerRemoteFrame.setVisible(true);
 		}
+		
+		MotionEventHandler.getInstance();
 	}
 }

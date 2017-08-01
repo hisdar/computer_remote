@@ -27,7 +27,7 @@ public abstract class AbstractData {
 		// the length of long is 8 bytes
 		long number = 0;
 		for (int i = 0; i < bytesData.length; i++) {
-			number |= (bytesData[i] << (i * 8));
+			number |= ((bytesData[i] & 0xFF) << (i * 8));
 		}
 
 		return number;
@@ -47,7 +47,7 @@ public abstract class AbstractData {
 		// the length of long is 4 bytes
 		int number = 0;
 		for (int i = 0; i < bytesData.length; i++) {
-			number |= (bytesData[i] << (i * 8));
+			number |= ((bytesData[i] & 0xFF) << (i * 8));
 		}
 
 		return number;

@@ -1,5 +1,7 @@
 package cn.hisdar.cr.communication.handler;
 
+import cn.hisdar.cr.communication.data.AbstractData;
+
 /**
  * Created by Hisdar on 2017/7/26.
  */
@@ -18,12 +20,7 @@ public class CommonHandler extends AbstractDataHandler {
 
     @Override
     public int getDataType() {
-        return DATA_TYPE_COMMON_DATA;
-    }
-
-    @Override
-    public byte[] encode() {
-        return data;
+        return AbstractData.DATA_TYPE_COMMON_DATA;
     }
 
     @Override

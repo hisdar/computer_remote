@@ -42,7 +42,7 @@ public class ServerControlerView extends JPanel implements ActionListener {
 	public ServerControlerView() {
 		
 		applicationConfig = HConfig.getInstance(Global.APPLICATION_CONFIG_FILE);
-		computerRemoteServer = new CRServer(5299);
+		computerRemoteServer = CRServer.getInstance();
 		
 		setOpaque(true);
 		setBackground(new Color(0xbcc7d8));

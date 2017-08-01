@@ -4,17 +4,27 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.net.Socket;
 import java.util.ArrayList;
 
 import javax.swing.JPanel;
 
+import cn.hisdar.cr.communication.client.ClientEventListener;
+import cn.hisdar.cr.communication.data.AbstractData;
+import cn.hisdar.cr.communication.data.RequestData;
+import cn.hisdar.cr.communication.data.ScreenSizeData;
+import cn.hisdar.cr.communication.handler.CRServer;
+import cn.hisdar.cr.communication.handler.HMotionEvent;
+import cn.hisdar.cr.communication.handler.HPoint;
+import cn.hisdar.cr.communication.handler.MotionEventHandler;
+import cn.hisdar.cr.communication.handler.MotionEventListener;
+import cn.hisdar.cr.communication.handler.ScreenSizeHandler;
+import cn.hisdar.cr.communication.handler.ScreenSizeListener;
+import cn.hisdar.cr.communication.socket.SocketIOManager;
 import cn.hisdar.cr.event.EventDispatcher;
-import cn.hisdar.cr.event.HMotionEvent;
-import cn.hisdar.cr.event.HMotionEventListener;
-import cn.hisdar.cr.event.Pointer;
-import cn.hisdar.cr.screen.ScreenSizeEventListener;
+import cn.hisdar.lib.log.HLog;
 
-public class ControlerView extends JPanel implements HMotionEventListener, ScreenSizeEventListener {
+public class ControlerView extends JPanel implements ScreenSizeListener, MotionEventListener, ClientEventListener {
 
 	private static final Color[] COLOR_LIST = {
 			new Color(0xB22222),
@@ -31,7 +41,7 @@ public class ControlerView extends JPanel implements HMotionEventListener, Scree
 	
 	private EventDispatcher eventDispatcher = null;
 	private BufferedImage touchEventImage = null;
-	private Point screenSize = null;
+	private ScreenSizeData screenSize = null;
 	
 	private ArrayList<HMotionEvent> motionEvents = null;
 	private HMotionEvent currentMotionEvent = null;
@@ -40,37 +50,12 @@ public class ControlerView extends JPanel implements HMotionEventListener, Scree
 	public ControlerView() {
 		
 		motionEvents = new ArrayList<>();
-		
-		eventDispatcher = EventDispatcher.getInstance();
-		eventDispatcher.addHMotionEventListener(this);
-		eventDispatcher.addScreenSizeEventListener(this);
+		MotionEventHandler.getInstance().addMotionEventListener(this);
+		CRServer.getInstance().addClientEventListener(this);
+		ScreenSizeHandler.getInstance().addScreenSizeListener(this);
 		
 		touchEventDrawTherad = new TouchEventDrawTherad();
 		touchEventDrawTherad.start();
-	}
-
-	@Override
-	public void motionEvent(HMotionEvent event) {
-		currentMotionEvent = event;
-		touchEventDrawTherad.interrupt();
-		
-		switch (event.getAction()) {
-		case HMotionEvent.ACTION_UP:
-			while (motionEvents.size() > 0) {
-				motionEvents.remove(0);
-			}
-			
-			motionEvents.add(event);
-			
-			break;
-		case HMotionEvent.ACTION_DOWN:
-			motionEvents.add(event);
-			
-			break;
-		default:
-			motionEvents.add(event);
-			break;
-		}
 	}
 
 	@Override
@@ -88,8 +73,8 @@ public class ControlerView extends JPanel implements HMotionEventListener, Scree
 	}
 	
 	// get image size
-	private Point getTouchEventImageSize(Point screenSize) {
-		double screenWidthHeightRate = screenSize.x * 1.0 / screenSize.y;
+	private Point getTouchEventImageSize(ScreenSizeData screenSize) {
+		double screenWidthHeightRate = screenSize.getWidth() * 1.0 / screenSize.getHeight();
 		double viewWidthHeightRate = getWidth() * 1.0 / getHeight();
 		
 		Point imageSize = new Point();
@@ -105,14 +90,10 @@ public class ControlerView extends JPanel implements HMotionEventListener, Scree
 		return imageSize;
 	}
 
-	@Override
-	public void screenSizeEvent(Point screenSize) {
-		this.screenSize = screenSize;
-	}
-	
 	private BufferedImage getTouchEventImage() {
 		
-		if (screenSize == null) {
+		if (screenSize == null || screenSize.getWidth() <= 0 || screenSize.getHeight() <= 0) {
+			requestScreenSize(null);
 			return null;
 		}
 		
@@ -124,9 +105,9 @@ public class ControlerView extends JPanel implements HMotionEventListener, Scree
 		return touchEventImage;
 	}
 	
-	private Point coordinateRransformation(Pointer srcPointer, Point screenSize, Point imageSize) {
-		double xRate = imageSize.getX() / screenSize.getX();
-		double yRate = imageSize.getY() / screenSize.getY();
+	private Point coordinateRransformation(HPoint srcPointer, ScreenSizeData screenSize, Point imageSize) {
+		double xRate = imageSize.getX() / screenSize.getWidth();
+		double yRate = imageSize.getY() / screenSize.getHeight();
 		
 		Point outputPoint = new Point();
 		outputPoint.x = (int)(srcPointer.getX() * xRate);
@@ -145,6 +126,7 @@ public class ControlerView extends JPanel implements HMotionEventListener, Scree
 				} catch (InterruptedException e) {}
 				
 				if (screenSize == null) {
+					HLog.dl("screen size is null");
 					continue;
 				}
 				
@@ -157,7 +139,7 @@ public class ControlerView extends JPanel implements HMotionEventListener, Scree
 					continue;
 				}
 				
-				ArrayList<Pointer> touchPointers = currentMotionEvent.getPointers();
+				ArrayList<HPoint> touchPointers = currentMotionEvent.getPoints();
 				Graphics imageGraphics = touchEventImage.getGraphics();
 				
 				imageGraphics.setColor(Color.BLACK);
@@ -186,5 +168,51 @@ public class ControlerView extends JPanel implements HMotionEventListener, Scree
 				repaint();
 			}
 		}
+	}
+
+	@Override
+	public void motionEvent(HMotionEvent event) {
+
+		currentMotionEvent = event;
+		touchEventDrawTherad.interrupt();
+		
+		switch (event.getAction()) {
+		case HMotionEvent.ACTION_UP:
+			while (motionEvents.size() > 0) {
+				motionEvents.remove(0);
+			}
+			
+			motionEvents.add(event);
+			
+			break;
+		case HMotionEvent.ACTION_DOWN:
+			motionEvents.add(event);
+			
+			break;
+		default:
+			motionEvents.add(event);
+			break;
+		}
+		
+		touchEventDrawTherad.interrupt();
+	}
+	
+	private void requestScreenSize(Socket clientSocket) {
+		// if client connect to server, request client screen size
+		System.out.println("send request cmd to get screen size");
+		RequestData requestData = new RequestData(AbstractData.DATA_TYPE_SCREEN_SIZE);
+		SocketIOManager.getInstance().sendDataToClient(requestData, clientSocket);
+	}
+
+	@Override
+	public void clientConnectEvent(Socket clientSocket) {
+		// if client connect to server, request client screen size
+		requestScreenSize(clientSocket);
+	}
+
+	@Override
+	public void screenSizeEvent(ScreenSizeData screenSizeData) {
+		this.screenSize = screenSizeData;
+		HLog.dl(screenSize);
 	}
 }

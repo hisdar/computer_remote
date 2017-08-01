@@ -17,7 +17,9 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import cn.hisdar.computerremote.common.Global;
-import cn.hisdar.cr.screen.ScreenSizeEventListener;
+import cn.hisdar.cr.communication.handler.HMotionEvent;
+import cn.hisdar.cr.communication.handler.MotionEventListener;
+import cn.hisdar.cr.communication.handler.ScreenSizeListener;
 import cn.hisdar.lib.adapter.IntegerAdapter;
 import cn.hisdar.lib.log.HLog;
 
@@ -26,12 +28,9 @@ public class EventDispatcher {
 	private static EventDispatcher motionEventDispatcher = null;
 	private static boolean isStop = false;
 	
-	private static ArrayList<HMotionEventListener> motionEventListeners = null;
+	private static ArrayList<MotionEventListener> motionEventListeners = null;
 	private static ArrayList<HMouseEventListener> mouseEventListeners = null;
 	private static ArrayList<HKeyEventListener> keyEventListeners = null;
-	private static ArrayList<ScreenSizeEventListener> screenSizeEventListeners = null;
-	
-	private static Point screenSize = null;
 	
 	private MotionEventDispatchThread dispatchThread = null;
 	private ArrayList<HEventData> motionEventWaitArray = null;
@@ -56,7 +55,6 @@ public class EventDispatcher {
 					motionEventListeners = new ArrayList<>();
 					mouseEventListeners = new ArrayList<>();
 					keyEventListeners = new ArrayList<>();
-					screenSizeEventListeners = new ArrayList<>();
 				}
 			}
 		}
@@ -171,7 +169,7 @@ public class EventDispatcher {
 		} else if (dataType.equals(Global.DATA_TYPE_SCREEN_SIZE)) {
 			Node screenSizeNode = getChildNode(computerRemoteNode, Global.DATA_TYPE_SCREEN_SIZE);
 			Point screenSize = parseScreenSize(screenSizeNode);
-			notifyScreenSizeEvent(screenSize);
+			//notifyScreenSizeEvent(screenSize);
 		} else if (dataType.equals(Global.XML_NODE_KEY_BUTTON_EVENT)) {
 			Node keyEventNode = getChildNode(computerRemoteNode, Global.XML_NODE_KEY_BUTTON_EVENT);
 			HKeyEvent mouseEvent = parseKeyEvent(keyEventNode);
@@ -239,51 +237,51 @@ public class EventDispatcher {
 		
 		// get action
 		String action = getChildNodeValue(motionEventNode, Global.XML_NODE_ACTION);
-		motionEvent.setAction(action);
+		//motionEvent.setAction(action);
 		
 		// get action button
 		String actionButton = getChildNodeValue(motionEventNode, Global.XML_NODE_ACTION_BUTTON);
-		motionEvent.setActionButton(actionButton);
+		//motionEvent.setActionButton(actionButton);
 		
 		// get button state
 		String buttonState = getChildNodeValue(motionEventNode, Global.XML_NODE_BUTTON_STATE);
-		motionEvent.setButtonState(buttonState);
+		//motionEvent.setButtonState(buttonState);
 		
 		// get meta state
 		String metaState = getChildNodeValue(motionEventNode, Global.XML_NODE_META_STATE);
-		motionEvent.setMetaState(metaState);
+		//motionEvent.setMetaState(metaState);
 		
 		// get flags
 		String flags = getChildNodeValue(motionEventNode, Global.XML_NODE_FLAGS);
-		motionEvent.setFlags(flags);
+		//motionEvent.setFlags(flags);
 		
 		// get edge Flags
 		String edgeFlags = getChildNodeValue(motionEventNode, Global.XML_NODE_EDGE_FLAGS);
-		motionEvent.setEdgeFlags(edgeFlags);
+		//motionEvent.setEdgeFlags(edgeFlags);
 		
 		// get pointer Count
 		String pointerCount = getChildNodeValue(motionEventNode, Global.XML_NODE_POINTER_COUNT);
-		motionEvent.setPpointerCount(pointerCount);
+		//motionEvent.setPpointerCount(pointerCount);
 		
 		// get history Size
 		String historySize = getChildNodeValue(motionEventNode, Global.XML_NODE_HISTORY_SIZE);
-		motionEvent.setHistorySize(historySize);
+		//motionEvent.setHistorySize(historySize);
 		
 		// get event Time
 		String eventTime = getChildNodeValue(motionEventNode, Global.XML_NODE_EVENT_TIME);
-		motionEvent.setEventTime(eventTime);
+		//motionEvent.setEventTime(eventTime);
 		
 		// get down Time
 		String downTime = getChildNodeValue(motionEventNode, Global.XML_NODE_DOWN_TIME);
-		motionEvent.setDownTime(downTime);
+		//motionEvent.setDownTime(downTime);
 		
 		// get device Id
 		String deviceId = getChildNodeValue(motionEventNode, Global.XML_NODE_DEVICE_ID);
-		motionEvent.setDeviceId(deviceId);
+		//motionEvent.setDeviceId(deviceId);
 		
 		// get source
 		String source = getChildNodeValue(motionEventNode, Global.XML_NODE_SOURCE);
-		motionEvent.setSource(source);
+		//motionEvent.setSource(source);
 		
 		// parse pointers
 		Node pointersNode = getChildNode(motionEventNode, Global.XML_NODE_POINTERS);
@@ -300,7 +298,7 @@ public class EventDispatcher {
 			//HLog.dl("EventDispatcher.parseMotionEventPointers: child node name=" + pointerNodes.item(i).getNodeName());
 			if (pointerNodes.item(i).getNodeName().equals(Global.XML_NODE_POINTER)) {
 				Pointer pointer = parseMotionEventPointer(pointerNodes.item(i));
-				motionEvent.addPointer(pointer);
+				//motionEvent.addPointer(pointer);
 			}
 		}
 	}
@@ -350,7 +348,7 @@ public class EventDispatcher {
 		return getNodeFromNodeList(childNodes, childNodeName);
 	}
 	
-	public void addHMotionEventListener(HMotionEventListener listener) {
+	public void addHMotionEventListener(MotionEventListener listener) {
 		for (int i = 0; i < motionEventListeners.size(); i++) {
 			if (motionEventListeners.get(i) == listener) {
 				return;
@@ -360,7 +358,7 @@ public class EventDispatcher {
 		motionEventListeners.add(listener);
 	}
 	
-	public void removeHMotionEventListener(HMotionEventListener listener) {
+	public void removeHMotionEventListener(MotionEventListener listener) {
 		for (int i = 0; i < motionEventListeners.size(); i++) {
 			if (motionEventListeners.get(i) == listener) {
 				motionEventListeners.remove(i);
@@ -424,32 +422,4 @@ public class EventDispatcher {
 			keyEventListeners.get(i).keyEvent(mouseEvent);
 		}
 	}
-	
-	public void addScreenSizeEventListener(ScreenSizeEventListener listener) {
-		for (int i = 0; i < screenSizeEventListeners.size(); i++) {
-			if (screenSizeEventListeners.get(i) == listener) {
-				return;
-			}
-		}
-		
-		screenSizeEventListeners.add(listener);
-		listener.screenSizeEvent(screenSize);
-	}
-	
-	public void removeScreenSizeEventListener(ScreenSizeEventListener listener) {
-		for (int i = 0; i < screenSizeEventListeners.size(); i++) {
-			if (screenSizeEventListeners.get(i) == listener) {
-				screenSizeEventListeners.remove(i);
-				return;
-			}
-		}
-	}
-	
-	private void notifyScreenSizeEvent(Point screenSize) {
-		EventDispatcher.screenSize = screenSize;
-		for (int i = 0; i < screenSizeEventListeners.size(); i++) {
-			screenSizeEventListeners.get(i).screenSizeEvent(screenSize);
-		}
-	}
-
 }

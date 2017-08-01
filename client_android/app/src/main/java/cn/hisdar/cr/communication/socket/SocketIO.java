@@ -1,9 +1,5 @@
 package cn.hisdar.cr.communication.socket;
 
-import android.util.Log;
-
-import com.cn.hisdar.cra.activity.CRAActivity;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -111,15 +107,15 @@ public class SocketIO {
 		    // read the data length
 		    while (!isStop) {
 		        try {
-		            // read send time
+		            // read send time 8 bytes
 		            byte[] dataTimeByte = readData(inputStream, 8);
 		            long dataTime = AbstractDataHandler.bytesToLong(dataTimeByte);
-		
-		            // read data type
+
+		            // read data type 4 bytes
 		            byte[] dataTypeByte = readData(inputStream, 4);
 		            int dataType = AbstractDataHandler.bytesToInt(dataTypeByte);
 
-		            // read data length
+		            // read data length 4 bytes
 		            byte[] dataLenByte = readData(inputStream, 4);
 		            int dataLen = AbstractDataHandler.bytesToInt(dataLenByte);
 
@@ -143,20 +139,19 @@ public class SocketIO {
         }
 
         try {
-			Log.i(CRAActivity.TAG, "send data ...");
-			OutputStream out = socket.getOutputStream();
+            OutputStream out = socket.getOutputStream();
 
-            // write send time
+            // write send time 8 bytes
             out.write(AbstractDataHandler.longToBytes(System.currentTimeMillis()));
             out.flush();
-
-            // write data type
+            
+            // write data type 4 bytes
             out.write(AbstractDataHandler.intToBytes(data.getDataType()));
             out.flush();
 
-            // write data length to client, the length is 4, sizeof(int)
             byte[] bytesData = data.encode();
-
+            
+            // write data length to client, 4 bytes
             byte[] dataLength = AbstractDataHandler.intToBytes(bytesData.length);
             out.write(dataLength);
             out.flush();

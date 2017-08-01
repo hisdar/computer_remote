@@ -10,14 +10,12 @@ import java.awt.Robot;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
+import cn.hisdar.cr.communication.handler.MotionEventListener;
 import cn.hisdar.cr.communication.handler.ScreenPictureHandler;
 import cn.hisdar.cr.controler.GestureListener;
 import cn.hisdar.cr.controler.GestureParser;
-import cn.hisdar.cr.event.EventDispatcher;
-import cn.hisdar.cr.event.HMotionEvent;
-import cn.hisdar.cr.event.HMotionEventListener;
 
-public class ScreenHunterServer implements HMotionEventListener, GestureListener {
+public class ScreenHunterServer implements MotionEventListener, GestureListener {
 
 	private static ScreenHunterServer screenHunterServer = null;
 	private ArrayList<ScreenHunterListener> listeners = null;
@@ -33,8 +31,8 @@ public class ScreenHunterServer implements HMotionEventListener, GestureListener
 		GestureParser gestureParser = GestureParser.getInstance();
 		gestureParser.addGestureListener(this);
 		
-		EventDispatcher eventDispatcher = EventDispatcher.getInstance();
-		eventDispatcher.addHMotionEventListener(this);
+		//EventDispatcher eventDispatcher = EventDispatcher.getInstance();
+		//eventDispatcher.addHMotionEventListener(this);
 		
 		listeners = new ArrayList<>();
 		startServer();
@@ -256,15 +254,6 @@ public class ScreenHunterServer implements HMotionEventListener, GestureListener
 	}
 
 	@Override
-	public void motionEvent(HMotionEvent event) {
-		sendFlag = true;
-		if (screenPictureSendThread == null || !screenPictureSendThread.isAlive()) {
-			screenPictureSendThread = new Thread(new ScreenPictureSendRunnable());
-			screenPictureSendThread.start();
-		}
-	}
-
-	@Override
 	public void pinckBiggerEvemt(double value) {
 		pinchSize += value;
 	}
@@ -294,6 +283,15 @@ public class ScreenHunterServer implements HMotionEventListener, GestureListener
 			}
 		}
 		
+	}
+
+	@Override
+	public void motionEvent(cn.hisdar.cr.communication.handler.HMotionEvent event) {
+		sendFlag = true;
+		if (screenPictureSendThread == null || !screenPictureSendThread.isAlive()) {
+			screenPictureSendThread = new Thread(new ScreenPictureSendRunnable());
+			screenPictureSendThread.start();
+		}
 	}
 
 	

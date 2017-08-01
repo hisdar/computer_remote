@@ -1,9 +1,8 @@
 package cn.hisdar.cr.communication.handler;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 
+import cn.hisdar.cr.communication.data.AbstractData;
 import cn.hisdar.cr.communication.data.MotionEventData;
 import cn.hisdar.cr.communication.socket.SocketIOManager;
 
@@ -32,20 +31,17 @@ public class MotionEventHandler extends AbstractDataHandler {
     private MotionEventHandler() {
     	motionEventListeners = new ArrayList<>();
     	SocketIOManager.getInstance().addDataHandler(this);
-    	//CRCSManager.getInstance().getDataServer().registerServerEventListener(this);
     }
 
     @Override
     public int getDataType() {
-        return DATA_TYPE_MOTION_EVENT;
+        return AbstractData.DATA_TYPE_MOTION_EVENT;
     }
 
     @Override
     public boolean decode(byte[] data) {
         MotionEventData motionEventData = new MotionEventData();
         motionEventData.decode(data);
-        
-        System.out.println("MotionEventData:");
         
         for (int i = 0; i < motionEventListeners.size(); i++) {
 			motionEventListeners.get(i).motionEvent(motionEventData.getMotionEvent());

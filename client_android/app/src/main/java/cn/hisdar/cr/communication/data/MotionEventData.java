@@ -53,6 +53,11 @@ public class MotionEventData extends AbstractData {
 
     @Override
     public boolean decode(byte[] data) {
+    	
+    	if (motionEvent == null) {
+    		motionEvent = new HMotionEvent();
+    	}
+    	
         ByteArrayInputStream byIn = new ByteArrayInputStream(data);
         byte[] intBytes = new byte[4];
         byte[] longBytes = new byte[8];

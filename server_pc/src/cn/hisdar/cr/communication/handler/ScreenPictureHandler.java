@@ -8,6 +8,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import cn.hisdar.cr.communication.data.AbstractData;
 import cn.hisdar.lib.log.HLog;
 
 public class ScreenPictureHandler extends AbstractDataHandler {
@@ -17,7 +18,7 @@ public class ScreenPictureHandler extends AbstractDataHandler {
 
     @Override
     public int getDataType() {
-        return DATA_TYPE_SCREEN_PICTURE;
+        return AbstractData.DATA_TYPE_SCREEN_PICTURE;
     }
 
     public byte[] encode() {

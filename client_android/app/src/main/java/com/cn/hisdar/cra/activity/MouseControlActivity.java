@@ -21,20 +21,23 @@ import com.cn.hisdar.cra.HResponseDataListener;
 import com.cn.hisdar.cra.HServerEvent;
 import com.cn.hisdar.cra.HServerEventListener;
 import com.cn.hisdar.cra.R;
-import cn.hisdar.cr.communication.AbstractDataHandler;
-import cn.hisdar.cr.communication.handler.HMotionEvent;
-import cn.hisdar.cr.communication.MotionEventHandler;
-import cn.hisdar.cr.communication.ScreenSizeHandler;
-import cn.hisdar.cr.communication.ServerCommunication;
 import com.cn.hisdar.cra.common.Global;
-import cn.hisdar.cr.communication.CRClient;
-import cn.hisdar.cr.communication.data.MotionEventData;
-import cn.hisdar.cr.communication.socket.SocketIOManager;
-
 import com.cn.hisdar.cra.server.ds.CommunicationEventListener;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
+
+import cn.hisdar.cr.communication.AbstractDataHandler;
+import cn.hisdar.cr.communication.CRClient;
+import cn.hisdar.cr.communication.ServerCommunication;
+import cn.hisdar.cr.communication.data.AbstractData;
+import cn.hisdar.cr.communication.data.MotionEventData;
+import cn.hisdar.cr.communication.data.RequestData;
+import cn.hisdar.cr.communication.data.ScreenSizeData;
+import cn.hisdar.cr.communication.handler.HMotionEvent;
+import cn.hisdar.cr.communication.handler.RequestDataHandler;
+import cn.hisdar.cr.communication.handler.RequestEventListener;
+import cn.hisdar.cr.communication.socket.SocketIOManager;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -43,7 +46,8 @@ import java.io.InputStreamReader;
  * @see
  */
 @SuppressLint("ClickableViewAccessibility") public class MouseControlActivity extends Activity
-	implements OnTouchListener, HResponseDataListener, HServerEventListener, CommunicationEventListener {
+	implements OnTouchListener, HResponseDataListener, HServerEventListener, CommunicationEventListener,
+		RequestEventListener {
 	
 	private static final int SHOW_RESPONSE_MESSAGE 	= 0x10001;
 	private static final int SERVER_EVENT 			= 0x10002;
@@ -80,10 +84,10 @@ import java.io.InputStreamReader;
         CRClient dataServer = CRClient.getInstance();
         dataServer.addCommunicationEventListener(this, AbstractDataHandler.DATA_TYPE_SCREEN_PICTURE);
 
-		//sendScreenSize();
+		RequestDataHandler.getInstance().addRequestEventListener(this);
+
+		sendScreenSize();
 	}
-
-
 
 	@Override
 	public boolean onTouch(View arg0, MotionEvent arg1) {
@@ -193,8 +197,20 @@ import java.io.InputStreamReader;
 		int height = touchPanelView.getHeight();
 		int width = touchPanelView.getWidth();
 
-		ScreenSizeHandler screenSizeData = new ScreenSizeHandler(width, height);
-		return CRClient.getInstance().sendData(screenSizeData);
+		//ScreenSizeHandler screenSizeData = new ScreenSizeHandler(width, height);
+		//return CRClient.getInstance().sendData(screenSizeData);
+		Log.d(CRAActivity.TAG, "send screen size data:" + width + ", " + height);
+		ScreenSizeData screenSizeData = new ScreenSizeData(width, height);
+		SocketIOManager.getInstance().sendDataToClient(screenSizeData, null);
+
+		return true;
+	}
+
+	@Override
+	public void requestEvent(RequestData requestData) {
+		if (requestData.getRequestDataType() == AbstractData.DATA_TYPE_SCREEN_SIZE) {
+			sendScreenSize();
+		}
 	}
 
 	private class MessageHandler extends Handler {

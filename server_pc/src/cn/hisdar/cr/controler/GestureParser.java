@@ -2,14 +2,12 @@ package cn.hisdar.cr.controler;
 
 import java.util.ArrayList;
 
-import cn.hisdar.cr.event.EventDispatcher;
-import cn.hisdar.cr.event.HMotionEvent;
-import cn.hisdar.cr.event.HMotionEventListener;
+import cn.hisdar.cr.communication.handler.HMotionEvent;
+import cn.hisdar.cr.communication.handler.MotionEventListener;
 import cn.hisdar.cr.event.PinchPointer;
 import cn.hisdar.cr.event.Pointer;
-import cn.hisdar.lib.log.HLog;
 
-public class GestureParser implements HMotionEventListener {
+public class GestureParser implements MotionEventListener {
 	
 	public static GestureParser gestureParser = null;
 	
@@ -36,22 +34,6 @@ public class GestureParser implements HMotionEventListener {
 		}
 		
 		return gestureParser;
-	}
-
-	@Override
-	public void motionEvent(HMotionEvent event) {
-		
-		// finger up or finger count less than 2, clear pinch history data
-		if (event.action == HMotionEvent.ACTION_UP || event.getPointerCount() != 2) {
-			while (pinchHistoryPointers.size() > 0) {
-				pinchHistoryPointers.remove(0);
-				distances.remove(0);
-			}
-		}
-		
-		if (event.getPointerCount() == 2) {
-			pinchGestureParse(event);
-		}
 	}
 	
 	private void pinchGestureParse(HMotionEvent event) {
@@ -141,5 +123,20 @@ public class GestureParser implements HMotionEventListener {
 	
 	public void removeGestureListener(GestureListener l) {
 		gestureListeners.remove(l);
+	}
+
+	@Override
+	public void motionEvent(HMotionEvent event) {
+		// finger up or finger count less than 2, clear pinch history data
+		if (event.action == HMotionEvent.ACTION_UP || event.getPointerCount() != 2) {
+			while (pinchHistoryPointers.size() > 0) {
+				pinchHistoryPointers.remove(0);
+				distances.remove(0);
+			}
+		}
+		
+		if (event.getPointerCount() == 2) {
+			pinchGestureParse(event);
+		}
 	}
 }

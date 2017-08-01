@@ -1,8 +1,10 @@
 package cn.hisdar.cr.communication.handler;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.util.ArrayList;
+
+import cn.hisdar.cr.communication.data.AbstractData;
+import cn.hisdar.cr.communication.data.ScreenSizeData;
+import cn.hisdar.cr.communication.socket.SocketIOManager;
 
 /**
  * Created by Hisdar on 2017/7/22.
@@ -10,44 +12,52 @@ import java.io.IOException;
 
 public class ScreenSizeHandler extends AbstractDataHandler {
 
-	public int screenWidth = 0;
-	public int screenHeight = 0;
+	private static ScreenSizeHandler screenSizeHandler = null;
+	private ScreenSizeData screenSizeData = null;
+	private ArrayList<ScreenSizeListener> screenSizeListeners = null;
 
-	public ScreenSizeHandler(int widht, int height) {
-		this.screenHeight = height;
-		this.screenWidth = widht;
+	public static ScreenSizeHandler getInstance() {
+		if (screenSizeHandler == null) {
+			synchronized (ScreenSizeHandler.class) {
+				if (screenSizeHandler == null) {
+					screenSizeHandler = new ScreenSizeHandler();
+				}
+			}
+		}
+		
+		return screenSizeHandler;
+	}
+	
+	private ScreenSizeHandler() {
+		screenSizeListeners = new ArrayList<>();
+		SocketIOManager.getInstance().addDataHandler(this);
+	}
+	
+	public void addScreenSizeListener(ScreenSizeListener l) {
+		for (int i = 0; i < screenSizeListeners.size(); i++) {
+			if (screenSizeListeners.get(i) == l) {
+				return;
+			}
+		}
+		
+		screenSizeListeners.add(l);
 	}
 
-	public int getScreenWidth() {
-		return screenWidth;
+	public void removeScreenSizeListener(ScreenSizeListener l) {
+		screenSizeListeners.remove(l);
 	}
-
-	public int getScreenHeight() {
-		return screenHeight;
-	}
-
-	public void setScreenWidth(int screenWidth) {
-		this.screenWidth = screenWidth;
-	}
-
-	public void setScreenHeight(int screenHeight) {
-		this.screenHeight = screenHeight;
-	}
-
+	
 	@Override
 	public int getDataType() {
-		return DATA_TYPE_SCREEN_SIZE;
+		return AbstractData.DATA_TYPE_SCREEN_SIZE;
 	}
 
 	public byte[] encode() {
-		ByteArrayOutputStream baOut = new ByteArrayOutputStream();
-		try {
-			baOut.write(intToBytes(screenWidth));
-			baOut.write(intToBytes(screenHeight));
-		} catch (Exception e) {
-			e.printStackTrace();
+		if (screenSizeData == null) {
+			return null;
 		}
-		return baOut.toByteArray();
+		
+		return screenSizeData.encode();
 	}
 
 	@Override
@@ -56,15 +66,16 @@ public class ScreenSizeHandler extends AbstractDataHandler {
 			return false;
 		}
 
-		ByteArrayInputStream baIn = new ByteArrayInputStream(data);
-		byte[] intBytes = new byte[4];
+		if (screenSizeData == null) {
+			screenSizeData = new ScreenSizeData();
+		}
+		
+		screenSizeData.decode(data);
 
-		baIn.read(intBytes, 0, 4);
-		screenWidth = bytesToInt(intBytes);
-
-		baIn.read(intBytes, 0, 4);
-		screenHeight = bytesToInt(intBytes);
-
+		for (int i = 0; i < screenSizeListeners.size(); i++) {
+			screenSizeListeners.get(i).screenSizeEvent(screenSizeData);
+		}
+		
 		return true;
 	}
 }
