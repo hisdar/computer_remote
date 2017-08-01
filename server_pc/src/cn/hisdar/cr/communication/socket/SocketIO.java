@@ -113,15 +113,15 @@ public class SocketIO {
 		    while (!isStop) {
 	            // read send time 8 bytes
 	            byte[] dataTimeByte = readData(inputStream, 8);
-	            long dataTime = AbstractDataHandler.bytesToLong(dataTimeByte);
+	            long dataTime = AbstractData.bytesToLong(dataTimeByte);
 
 	            // read data type 4 bytes
 	            byte[] dataTypeByte = readData(inputStream, 4);
-	            int dataType = AbstractDataHandler.bytesToInt(dataTypeByte);
+	            int dataType = AbstractData.bytesToInt(dataTypeByte);
 
 	            // read data length 4 bytes
 	            byte[] dataLenByte = readData(inputStream, 4);
-	            int dataLen = AbstractDataHandler.bytesToInt(dataLenByte);
+	            int dataLen = AbstractData.bytesToInt(dataLenByte);
 
 	            // read data
 	            byte[] dataBuf = readData(inputStream, dataLen);
@@ -142,17 +142,17 @@ public class SocketIO {
             OutputStream out = socket.getOutputStream();
 
             // write send time 8 bytes
-            out.write(AbstractDataHandler.longToBytes(System.currentTimeMillis()));
+            out.write(AbstractData.longToBytes(System.currentTimeMillis()));
             out.flush();
             
             // write data type 4 bytes
-            out.write(AbstractDataHandler.intToBytes(data.getDataType()));
+            out.write(AbstractData.intToBytes(data.getDataType()));
             out.flush();
 
             byte[] bytesData = data.encode();
             
             // write data length to client, 4 bytes
-            byte[] dataLength = AbstractDataHandler.intToBytes(bytesData.length);
+            byte[] dataLength = AbstractData.intToBytes(bytesData.length);
             out.write(dataLength);
             out.flush();
 

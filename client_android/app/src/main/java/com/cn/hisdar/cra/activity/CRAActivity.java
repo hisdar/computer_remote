@@ -24,19 +24,24 @@ import android.widget.TextView;
 import com.cn.hisdar.cra.R;
 import com.cn.hisdar.cra.lib.configuration.HConfig;
 import cn.hisdar.cr.communication.ServerCommunication;
-import com.cn.hisdar.cra.server.ServerInformation;
+import cn.hisdar.cr.communication.data.AbstractData;
+import cn.hisdar.cr.communication.data.RequestData;
+import cn.hisdar.cr.communication.data.ServerInfoData;
+import cn.hisdar.cr.communication.socket.SocketIOManager;
+
 import com.cn.hisdar.cra.server.ServerSearcher;
-import com.cn.hisdar.cra.server.ServerSearcherEventListener;
-import com.cn.hisdar.cra.server.ServerSearcherMessage;
+import com.cn.hisdar.cra.server.ServerSearcheerEventListener;
+import com.cn.hisdar.cra.server.ServerSearcherState;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import java.net.Socket;
 import java.util.ArrayList;
 
 public class CRAActivity extends AppCompatActivity
-        implements View.OnClickListener, ServerSearcherEventListener {
+        implements View.OnClickListener, ServerSearcheerEventListener {
 
     public static final String TAG = "Hisdar-CR";
     public static final int MOUSE_CONTROL_ACTIVITY_CODE = 5299;
@@ -59,7 +64,7 @@ public class CRAActivity extends AppCompatActivity
     private MessageHandler messageHandler;
 
     private ArrayList<TextView> serverTextViews;
-    private ArrayList<ServerInformation> serverInformations;
+    private ArrayList<ServerInfoData> serverInfoDatas;
     private ServerSearcher serverSearcher;
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -87,7 +92,7 @@ public class CRAActivity extends AppCompatActivity
         loadServerInfo();
 
         serverTextViews = new ArrayList<TextView>();
-        serverInformations = new ArrayList<ServerInformation>();
+        serverInfoDatas = new ArrayList<ServerInfoData>();
         messageHandler = new MessageHandler();
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -137,11 +142,11 @@ public class CRAActivity extends AppCompatActivity
 
         if (isServerView) {
             for (int i = 0; i < serverTextViews.size(); i++) {
-                if (serverInformations.get(i).getId() == arg0.getId()) {
+                if (serverInfoDatas.get(i).getId() == arg0.getId()) {
                     serverSearcher.stopSearch();
                     autoSearchButton.setText(TEXT_START_SEARCH);
                     messageView.setText(MESSAGE_ACTION);
-                    connectToServerButtonActionHandler(CRAActivity.this, serverInformations.get(i).getIpAddress(), serverInformations.get(i).getPort());
+                    connectToServerButtonActionHandler(CRAActivity.this, serverInfoDatas.get(i).getIpAddress(), serverInfoDatas.get(i).getPort());
                     break;
                 }
             }
@@ -261,8 +266,7 @@ public class CRAActivity extends AppCompatActivity
         return true;
     }
 
-    @Override
-    public void newServerFoundEvent(ServerInformation serverInfo) {
+    public void newServerFoundEvent(ServerInfoData serverInfo) {
         Message message = new Message();
         message.arg1 = CRA_MESSAGE_SERVER_FOUND;
         message.obj = serverInfo;
@@ -271,7 +275,15 @@ public class CRAActivity extends AppCompatActivity
     }
 
     @Override
-    public void serverSercherMessageEvent(ServerSearcherMessage msg) {
+    public void socketConnectedEvent(Socket socket) {
+        // request server information
+        RequestData requestData = new RequestData();
+        requestData.setRequestDataType(AbstractData.DATA_TYPE_SERVER_INFO);
+        SocketIOManager.getInstance().sendDataToClient(requestData, socket);
+    }
+
+    @Override
+    public void serverSercherStateEvent(ServerSearcherState msg) {
         Message message = new Message();
         message.arg1 = CRA_MESSAGE_SERVER_MESSAGE;
         message.obj = msg;
@@ -300,9 +312,9 @@ public class CRAActivity extends AppCompatActivity
         }
     }
 
-    private void handleServerFoundMessage(ServerInformation serverInfo) {
+    private void handleServerFoundMessage(ServerInfoData serverInfo) {
 
-        serverInformations.add(serverInfo);
+        serverInfoDatas.add(serverInfo);
 
         TextView textView = new TextView(getBaseContext());
         textView.setId(serverInfo.getId());
@@ -315,12 +327,12 @@ public class CRAActivity extends AppCompatActivity
         setServerViewParam(textView);
     }
 
-    private void handleServerMessage(ServerSearcherMessage msg) {
+    private void handleServerMessage(ServerSearcherState msg) {
         switch (msg.message) {
-            case ServerSearcherMessage.MESSAGE_WIFI_NOT_CONNECTED:
+            case ServerSearcherState.MESSAGE_WIFI_NOT_CONNECTED:
                 showMessage("WIFI 没有连接", "提示");
                 break;
-            case ServerSearcherMessage.SEARCH_FINISHED:
+            case ServerSearcherState.SEARCH_FINISHED:
                 messageView.setText(MESSAGE_SEARCH_FINISHED);
                 autoSearchButton.setText(TEXT_START_SEARCH);
                 break;
@@ -373,10 +385,10 @@ public class CRAActivity extends AppCompatActivity
             switch (msg.arg1) {
                 case CRA_MESSAGE_SERVER_FOUND:
 
-                    handleServerFoundMessage((ServerInformation) msg.obj);
+                    handleServerFoundMessage((ServerInfoData) msg.obj);
                     break;
                 case CRA_MESSAGE_SERVER_MESSAGE:
-                    handleServerMessage((ServerSearcherMessage) msg.obj);
+                    handleServerMessage((ServerSearcherState) msg.obj);
                     break;
                 default:
                     break;

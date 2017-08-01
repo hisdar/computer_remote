@@ -8,6 +8,7 @@ import java.util.ArrayList;
 
 import cn.hisdar.computerremote.common.Global;
 import cn.hisdar.cr.communication.handler.HMotionEvent;
+import cn.hisdar.cr.communication.handler.MotionEventHandler;
 import cn.hisdar.cr.communication.handler.MotionEventListener;
 import cn.hisdar.cr.event.HMouseEvent;
 import cn.hisdar.cr.event.HMouseEventListener;
@@ -26,6 +27,7 @@ public class MouseControler implements HMouseEventListener, MotionEventListener 
 	
 	public MouseControler() {
 		motionEvents = new ArrayList<>();
+		MotionEventHandler.getInstance().addMotionEventListener(this);
 	}
 
 	@Override

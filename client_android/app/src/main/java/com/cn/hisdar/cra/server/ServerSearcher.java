@@ -28,14 +28,17 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import cn.hisdar.cr.communication.data.ServerInfoData;
+import cn.hisdar.cr.communication.socket.SocketIOManager;
+
 public class ServerSearcher {
 	
-	private ArrayList<ServerSearcherEventListener> listeners;
+	private ArrayList<ServerSearcheerEventListener> listeners;
 	private int gSserverThreadCount = 0;
 	private boolean isStopSearch = false;
 	
 	public ServerSearcher() {
-		listeners = new ArrayList<ServerSearcherEventListener>();
+		listeners = new ArrayList<ServerSearcheerEventListener>();
 	}
 	
 	public void stopSearch() {
@@ -49,7 +52,7 @@ public class ServerSearcher {
 		gSserverThreadCount = 0;
 		
 		if (!isWifiConnected(context)) {
-			notifyServerSearchMessage(new ServerSearcherMessage(ServerSearcherMessage.MESSAGE_WIFI_NOT_CONNECTED));
+			notifyServerSearchMessage(new ServerSearcherState(ServerSearcherState.MESSAGE_WIFI_NOT_CONNECTED));
 			Log.e(CRAActivity.TAG, "wifi is not connected");
 			return;
 		}
@@ -227,25 +230,29 @@ public class ServerSearcher {
 				int localIPAddress = getIPAddress(context);
 				int netMask = getNetMask(context);
 				int id = ipAddressList.get(i) - (netMask & localIPAddress);
-				ServerInformation serverInfor = connecteAndGetServerInfor(getIPAddress(ipAddressList.get(i)), id);
+                String ipAddress = getIPAddress(ipAddressList.get(i));
+
+                try {
+                    Socket socket = new Socket(ipAddress, DEFAULT_PORT);
+                    // if connect success, add socket to socket io manager
+                    SocketIOManager.getInstance().addSocket(socket);
+                    notifyServerSearchEvent(socket);
+
+                } catch (IOException e1 ) {
+                    continue;
+                }
 
 				if (isStopSearch) {
 					return;
 				}
-				
-				if (serverInfor != null) {
-					
-					notifyServerSearchEvent(serverInfor);
-				}
 			}
-			
-			//Log.i(CRAActivity.TAG, "Thread finished:");
+
 			notifyServerSearchFinishedMessage();
 		}
 		
-		private ServerInformation connecteAndGetServerInfor(String ipAddress, int id) {
+		private ServerInfoData connecteAndGetServerInfor(String ipAddress, int id) {
 			Socket socket = null;
-			ServerInformation serverInformation = null;
+			ServerInfoData serverInformation = null;
 
 			try {
 				socket = new Socket(ipAddress, DEFAULT_PORT);
@@ -261,8 +268,8 @@ public class ServerSearcher {
 			return serverInformation;
 		}
 		
-		private ServerInformation getServerInformation(Socket socket) throws ParserConfigurationException, SAXException, IOException {
-			ServerInformation serverInformation = new ServerInformation();
+		private ServerInfoData getServerInformation(Socket socket) throws ParserConfigurationException, SAXException, IOException {
+			ServerInfoData serverInformation = new ServerInfoData();
 			serverInformation.setIpAddress(socket.getInetAddress().getHostAddress());
 			serverInformation.setServerName(socket.getInetAddress().getHostName());
 			serverInformation.setPort(DEFAULT_PORT + "");
@@ -336,7 +343,7 @@ public class ServerSearcher {
 		
 	}
 	
-	public void addServerSearcherListener(ServerSearcherEventListener l) {
+	public void addServerSearcherListener(ServerSearcheerEventListener l) {
 		for (int i = 0; i < listeners.size(); i++) {
 			if (listeners.get(i) == l) {
 				return;
@@ -346,16 +353,15 @@ public class ServerSearcher {
 		listeners.add(l);
 	}
 	
-	private void notifyServerSearchEvent(ServerInformation serverInformation) {
-		Log.e(CRAActivity.TAG, "Found server:" + serverInformation.toString());
+	private void notifyServerSearchEvent(Socket socket) {
 		for (int i = 0; i < listeners.size(); i++) {
-			listeners.get(i).newServerFoundEvent(serverInformation);
+			listeners.get(i).socketConnectedEvent(socket);
 		}
 	}
 	
-	private void notifyServerSearchMessage(ServerSearcherMessage message) {
+	private void notifyServerSearchMessage(ServerSearcherState message) {
 		for (int i = 0; i < listeners.size(); i++) {
-			listeners.get(i).serverSercherMessageEvent(message);
+			listeners.get(i).serverSercherStateEvent(message);
 		}
 	}
 	
@@ -367,13 +373,13 @@ public class ServerSearcher {
 		if (gSserverThreadCount == 0) {
 			Log.i(CRAActivity.TAG, "Search finished!!!");
 			for (int i = 0; i < listeners.size(); i++) {
-				ServerSearcherMessage message = new ServerSearcherMessage(ServerSearcherMessage.SEARCH_FINISHED);
-				listeners.get(i).serverSercherMessageEvent(message);
+				ServerSearcherState message = new ServerSearcherState(ServerSearcherState.SEARCH_FINISHED);
+				listeners.get(i).serverSercherStateEvent(message);
 			}
 		}
 	}
 	
-	public void removeServerSearcherListener(ServerSearcherEventListener l) {
+	public void removeServerSearcherListener(ServerSearcheerEventListener l) {
 		for (int i = listeners.size() - 1; i >= 0; i--) {
 			if (listeners.get(i) == l) {
 				listeners.remove(i);

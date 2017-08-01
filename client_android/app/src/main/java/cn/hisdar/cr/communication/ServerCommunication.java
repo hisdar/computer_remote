@@ -221,14 +221,6 @@ public class ServerCommunication extends Thread {
 			dataSocket = new Socket(ipAddress, dataPort);
 			currentIpAddress = dataSocket.getInetAddress().getHostAddress();
 			Log.e(CRAActivity.TAG, "connect to server success:");
-			
-			// start thread to read server message
-//			cmdServerReader = new CmdServerReader(cmdSocket);
-//			cmdServerReader.startServerReader();
-//
-//			dataServer = CRClient.getInstance();
-//			dataServer.initDataServer(dataSocket);
-
 
 			SocketIOManager.getInstance().addSocket(dataSocket);
 			

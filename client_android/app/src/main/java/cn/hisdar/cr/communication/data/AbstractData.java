@@ -6,8 +6,9 @@ public abstract class AbstractData {
 	public static final int DATA_TYPE_COMMON_DATA    = 0x10003;
 	public static final int DATA_TYPE_MOTION_EVENT   = 0x10004;
 	public static final int DATA_TYPE_REQUEST        = 0x10005;
+    public static final int DATA_TYPE_SERVER_INFO    = 0x10006;
 
-	abstract public int getDataType();
+    abstract public int getDataType();
 
 	abstract public boolean decode(byte[] data);
 
