@@ -3,13 +3,11 @@ package cn.hisdar.cr.communication;
 import android.util.Log;
 
 import com.cn.hisdar.cra.activity.CRAActivity;
-import com.cn.hisdar.cra.server.ds.CommunicationEventListener;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
 
 /**
  * Created by Hisdar on 2017/7/10.
@@ -18,12 +16,11 @@ import java.util.ArrayList;
 public class CRClient {
 
     private static CRClient dataServer = null;
-    private ArrayList<ListenerAndType> screenPictureListeners = null;
     private Socket dataSocket;
     private DataServerReader dataServerReader = null;
 
     private CRClient() {
-        screenPictureListeners = new ArrayList<>();
+
     }
 
     public static CRClient getInstance() {
@@ -61,48 +58,9 @@ public class CRClient {
     }
 
     private void dispatch(byte[] data, int dataType) {
-        for (ListenerAndType l : screenPictureListeners) {
-            if (l.dataType == dataType) {
-                l.listener.screenPictureEvent(data);
-            }
-        }
+
     }
 
-    public void addCommunicationEventListener(CommunicationEventListener l, int dataType) {
-        ListenerAndType listenerAndType = new ListenerAndType(l, dataType);
-        for (ListenerAndType listener : screenPictureListeners) {
-            if (listener.equal(listenerAndType)) {
-                return;
-            }
-        }
-
-        screenPictureListeners.add(listenerAndType);
-    }
-
-    public void removeCommunicationEventListener(CommunicationEventListener l) {
-        screenPictureListeners.remove(l);
-    }
-
-    
-
-    private class ListenerAndType {
-        public CommunicationEventListener listener;
-        public int dataType;
-
-        public ListenerAndType(CommunicationEventListener l, int dataType) {
-            listener = l;
-            this.dataType = dataType;
-        }
-
-        public boolean equal(ListenerAndType lt) {
-            if (listener == lt.listener
-                    && dataType == lt.dataType) {
-                return true;
-            }
-
-            return false;
-        }
-    }
 
     public boolean sendData(AbstractDataHandler data) {
 

@@ -7,7 +7,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import cn.hisdar.cr.communication.data.AbstractData;
-import cn.hisdar.cr.communication.handler.AbstractDataHandler;
 
 public class SocketIO {
 
@@ -75,15 +74,29 @@ public class SocketIO {
 		
 		public void stopServerReader() {
 		    isStop = true;
+		    
+		    for (int i = 0; i < socketIOEventListeners.size(); i++) {
+				socketIOEventListeners.get(i).socketDisconnectEvent(socket);
+			}
+		    
+		    socket = null;
 		}
 		
-		private byte[] readData(InputStream inputStream, int dataLen) throws IOException {
+		private byte[] readData(InputStream inputStream, int dataLen) {
 		
 		    int offset = 0;
 		    byte[] data = new byte[dataLen];
-		
-		    while (dataLen > 0) {
-		        int readLen = inputStream.read(data, offset, dataLen);
+		    int readLen = 0;
+		    while (dataLen > 0 && !isStop) {
+		    	try {
+		    		readLen = inputStream.read(data, offset, dataLen);
+		    	} catch (IOException e) {
+		    		e.printStackTrace();
+
+		    		stopServerReader();
+		    		break;
+		    	}
+
 		        offset += readLen;
 		        dataLen -= readLen;
 		    }
@@ -101,33 +114,31 @@ public class SocketIO {
 		    try {
 		        inputStream = socket.getInputStream();
 		    } catch (IOException e) {
+		    	e.printStackTrace();
 		        return;
 		    }
 		
 		    // read the data length
 		    while (!isStop) {
-		        try {
-		            // read send time 8 bytes
-		            byte[] dataTimeByte = readData(inputStream, 8);
-		            long dataTime = AbstractDataHandler.bytesToLong(dataTimeByte);
+	            // read send time 8 bytes
+	            byte[] dataTimeByte = readData(inputStream, 8);
+	            long dataTime = AbstractData.bytesToLong(dataTimeByte);
 
-		            // read data type 4 bytes
-		            byte[] dataTypeByte = readData(inputStream, 4);
-		            int dataType = AbstractDataHandler.bytesToInt(dataTypeByte);
+	            // read data type 4 bytes
+	            byte[] dataTypeByte = readData(inputStream, 4);
+	            int dataType = AbstractData.bytesToInt(dataTypeByte);
 
-		            // read data length 4 bytes
-		            byte[] dataLenByte = readData(inputStream, 4);
-		            int dataLen = AbstractDataHandler.bytesToInt(dataLenByte);
+	            // read data length 4 bytes
+	            byte[] dataLenByte = readData(inputStream, 4);
+	            int dataLen = AbstractData.bytesToInt(dataLenByte);
 
-		            // read data
-		            byte[] dataBuf = readData(inputStream, dataLen);
-		
-		            // notify data
-		            dispatch(dataBuf, dataType);
-		        } catch (IOException e) {
-		            e.printStackTrace();
-		            stopServerReader();
-		        }
+	            // read data
+	            byte[] dataBuf = readData(inputStream, dataLen);
+	
+	            // notify data
+	            if (!isStop) {
+	            	dispatch(dataBuf, dataType);
+	            }
 		    }
 		}
 	}
@@ -142,17 +153,17 @@ public class SocketIO {
             OutputStream out = socket.getOutputStream();
 
             // write send time 8 bytes
-            out.write(AbstractDataHandler.longToBytes(System.currentTimeMillis()));
+            out.write(AbstractData.longToBytes(System.currentTimeMillis()));
             out.flush();
             
             // write data type 4 bytes
-            out.write(AbstractDataHandler.intToBytes(data.getDataType()));
+            out.write(AbstractData.intToBytes(data.getDataType()));
             out.flush();
 
             byte[] bytesData = data.encode();
             
             // write data length to client, 4 bytes
-            byte[] dataLength = AbstractDataHandler.intToBytes(bytesData.length);
+            byte[] dataLength = AbstractData.intToBytes(bytesData.length);
             out.write(dataLength);
             out.flush();
 

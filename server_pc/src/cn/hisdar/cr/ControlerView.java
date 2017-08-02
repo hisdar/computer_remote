@@ -9,11 +9,9 @@ import java.util.ArrayList;
 
 import javax.swing.JPanel;
 
-import cn.hisdar.cr.communication.client.ClientEventListener;
 import cn.hisdar.cr.communication.data.AbstractData;
 import cn.hisdar.cr.communication.data.RequestData;
 import cn.hisdar.cr.communication.data.ScreenSizeData;
-import cn.hisdar.cr.communication.handler.CRServer;
 import cn.hisdar.cr.communication.handler.HMotionEvent;
 import cn.hisdar.cr.communication.handler.HPoint;
 import cn.hisdar.cr.communication.handler.MotionEventHandler;
@@ -21,10 +19,14 @@ import cn.hisdar.cr.communication.handler.MotionEventListener;
 import cn.hisdar.cr.communication.handler.ScreenSizeHandler;
 import cn.hisdar.cr.communication.handler.ScreenSizeListener;
 import cn.hisdar.cr.communication.socket.SocketIOManager;
-import cn.hisdar.cr.event.EventDispatcher;
 import cn.hisdar.lib.log.HLog;
 
-public class ControlerView extends JPanel implements ScreenSizeListener, MotionEventListener, ClientEventListener {
+public class ControlerView extends JPanel implements ScreenSizeListener, MotionEventListener, SocketAccepterListener {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -944554311448038861L;
 
 	private static final Color[] COLOR_LIST = {
 			new Color(0xB22222),
@@ -39,7 +41,6 @@ public class ControlerView extends JPanel implements ScreenSizeListener, MotionE
 			new Color(0xFFDAB9),
 	};
 	
-	private EventDispatcher eventDispatcher = null;
 	private BufferedImage touchEventImage = null;
 	private ScreenSizeData screenSize = null;
 	
@@ -51,7 +52,7 @@ public class ControlerView extends JPanel implements ScreenSizeListener, MotionE
 		
 		motionEvents = new ArrayList<>();
 		MotionEventHandler.getInstance().addMotionEventListener(this);
-		CRServer.getInstance().addClientEventListener(this);
+		SocketAccepter.getInstance().addSocketAccepterListener(this);
 		ScreenSizeHandler.getInstance().addScreenSizeListener(this);
 		
 		touchEventDrawTherad = new TouchEventDrawTherad();
@@ -126,7 +127,7 @@ public class ControlerView extends JPanel implements ScreenSizeListener, MotionE
 				} catch (InterruptedException e) {}
 				
 				if (screenSize == null) {
-					HLog.dl("screen size is null");
+					//HLog.dl("screen size is null");
 					continue;
 				}
 				
@@ -199,7 +200,7 @@ public class ControlerView extends JPanel implements ScreenSizeListener, MotionE
 	
 	private void requestScreenSize(Socket clientSocket) {
 		// if client connect to server, request client screen size
-		System.out.println("send request cmd to get screen size");
+		//System.out.println("send request cmd to get screen size");
 		RequestData requestData = new RequestData(AbstractData.DATA_TYPE_SCREEN_SIZE);
 		SocketIOManager.getInstance().sendDataToClient(requestData, clientSocket);
 	}
@@ -213,6 +214,12 @@ public class ControlerView extends JPanel implements ScreenSizeListener, MotionE
 	@Override
 	public void screenSizeEvent(ScreenSizeData screenSizeData) {
 		this.screenSize = screenSizeData;
-		HLog.dl(screenSize);
+		//HLog.dl(screenSize);
+	}
+
+	@Override
+	public void socketAccepterEvent(int state) {
+		// TODO Auto-generated method stub
+		
 	}
 }

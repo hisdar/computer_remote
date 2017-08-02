@@ -1,5 +1,6 @@
 package cn.hisdar.cr.communication.handler;
 
+import java.net.Socket;
 import java.util.ArrayList;
 
 import cn.hisdar.cr.communication.data.AbstractData;
@@ -39,7 +40,7 @@ public class MotionEventHandler extends AbstractDataHandler {
     }
 
     @Override
-    public boolean decode(byte[] data) {
+	public boolean decode(byte[] data, Socket socket) {
         MotionEventData motionEventData = new MotionEventData();
         motionEventData.decode(data);
         

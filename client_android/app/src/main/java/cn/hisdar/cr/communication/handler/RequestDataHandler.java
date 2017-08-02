@@ -1,5 +1,6 @@
 package cn.hisdar.cr.communication.handler;
 
+import java.net.Socket;
 import java.util.ArrayList;
 
 import cn.hisdar.cr.communication.data.AbstractData;
@@ -50,7 +51,7 @@ public class RequestDataHandler extends AbstractDataHandler {
 	}
 
 	@Override
-	public boolean decode(byte[] data) {
+	public boolean decode(byte[] data, Socket socket) {
 		if (requestData == null) {
 			requestData = new RequestData();
 		}

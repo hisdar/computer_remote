@@ -23,14 +23,8 @@ import android.widget.TextView;
 
 import com.cn.hisdar.cra.R;
 import com.cn.hisdar.cra.lib.configuration.HConfig;
-import cn.hisdar.cr.communication.ServerCommunication;
-import cn.hisdar.cr.communication.data.AbstractData;
-import cn.hisdar.cr.communication.data.RequestData;
-import cn.hisdar.cr.communication.data.ServerInfoData;
-import cn.hisdar.cr.communication.socket.SocketIOManager;
-
-import com.cn.hisdar.cra.server.ServerSearcher;
 import com.cn.hisdar.cra.server.ServerSearcheerEventListener;
+import com.cn.hisdar.cra.server.ServerSearcher;
 import com.cn.hisdar.cra.server.ServerSearcherState;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
@@ -40,8 +34,16 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import cn.hisdar.cr.communication.ServerCommunication;
+import cn.hisdar.cr.communication.data.AbstractData;
+import cn.hisdar.cr.communication.data.RequestData;
+import cn.hisdar.cr.communication.data.ServerInfoData;
+import cn.hisdar.cr.communication.handler.ServerInfoHandler;
+import cn.hisdar.cr.communication.handler.ServerInfoListener;
+import cn.hisdar.cr.communication.socket.SocketIOManager;
+
 public class CRAActivity extends AppCompatActivity
-        implements View.OnClickListener, ServerSearcheerEventListener {
+        implements View.OnClickListener, ServerSearcheerEventListener, ServerInfoListener {
 
     public static final String TAG = "Hisdar-CR";
     public static final int MOUSE_CONTROL_ACTIVITY_CODE = 5299;
@@ -51,7 +53,7 @@ public class CRAActivity extends AppCompatActivity
     private static final CharSequence MESSAGE_SEARCH_FINISHED = "搜索结束";
     private static final CharSequence TEXT_STOP_SEARCH = "停止搜索";
     private static final CharSequence TEXT_START_SEARCH = "自动搜索";
-    private static final int CRA_MESSAGE_SERVER_FOUND = 0x00000001;
+    private static final int CRA_MESSAGE_SERVER_INFO = 0x00000001;
     private static final int CRA_MESSAGE_SERVER_MESSAGE = 0x00000002;
 
     private Button autoSearchButton;
@@ -97,6 +99,8 @@ public class CRAActivity extends AppCompatActivity
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+
+        ServerInfoHandler.getInstance().addServerInfoListener(this);
     }
 
     @Override
@@ -124,9 +128,7 @@ public class CRAActivity extends AppCompatActivity
         } else if (arg0.getId() == inputAddressButton.getId()) {
             Intent intent = new Intent(CRAActivity.this, InputServerAddressActivity.class);
             intent.putExtra("skip", "MainActivity");
-            //��תActivity
             startActivity(intent);
-            //startActivityForResult(intent, MOUSE_CONTROL_ACTIVITY_CODE);
         } else {
             serverViewEvent(arg0);
         }
@@ -266,14 +268,6 @@ public class CRAActivity extends AppCompatActivity
         return true;
     }
 
-    public void newServerFoundEvent(ServerInfoData serverInfo) {
-        Message message = new Message();
-        message.arg1 = CRA_MESSAGE_SERVER_FOUND;
-        message.obj = serverInfo;
-
-        messageHandler.sendMessage(message);
-    }
-
     @Override
     public void socketConnectedEvent(Socket socket) {
         // request server information
@@ -377,13 +371,22 @@ public class CRAActivity extends AppCompatActivity
         client.disconnect();
     }
 
+    @Override
+    public void serverInfoEvent(ServerInfoData serverInfoData) {
+        Message message = new Message();
+        message.arg1 = CRA_MESSAGE_SERVER_INFO;
+        message.obj = serverInfoData;
+
+        messageHandler.sendMessage(message);
+    }
+
     private class MessageHandler extends Handler {
 
         @Override
         public void handleMessage(Message msg) {
 
             switch (msg.arg1) {
-                case CRA_MESSAGE_SERVER_FOUND:
+                case CRA_MESSAGE_SERVER_INFO:
 
                     handleServerFoundMessage((ServerInfoData) msg.obj);
                     break;

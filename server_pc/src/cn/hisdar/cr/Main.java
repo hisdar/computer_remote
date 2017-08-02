@@ -4,9 +4,11 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import cn.hisdar.cr.communication.handler.MotionEventHandler;
+import cn.hisdar.cr.communication.handler.ScreenPictureHandler;
 import cn.hisdar.cr.controler.KeyControler;
 import cn.hisdar.cr.controler.MouseControler;
 import cn.hisdar.cr.event.EventDispatcher;
+import cn.hisdar.cr.screen.ScreenHunterServer;
 import cn.hisdar.cr.systemtray.ComputerRemoteSystemTray;
 import cn.hisdar.lib.commandline.CommandLineAdapter;
 import cn.hisdar.lib.log.HLog;
@@ -31,6 +33,9 @@ public class Main {
 		// register log system
 		HLog.enableCmdLog();
 
+		// init handler 
+		MiscEventHandler miscEventHandler = new MiscEventHandler();
+		
 		// init command line 
 		CommandLineAdapter commandLineAdapter = CommandLineAdapter.getInstance();
 		commandLineAdapter.addCommands(COMMANDS);
@@ -65,5 +70,6 @@ public class Main {
 		}
 		
 		MotionEventHandler.getInstance();
+		ScreenHunterServer.getInstance();
 	}
 }

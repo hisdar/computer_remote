@@ -98,7 +98,7 @@ public class ServerSearcher {
 			searchedCount += 1;
 			
 			if (serchIp != maxIP && serchIp != netGate && serchIp != ipAddress) {
-				Log.i(CRAActivity.TAG, "Hisdar ip=" + getIPAddress(serchIp));
+				// Log.i(CRAActivity.TAG, "Hisdar ip=" + getIPAddress(serchIp));
 				ipListArrayList.get(i % gSserverThreadCount).add(new Integer(serchIp));
 			}
 		}
@@ -111,7 +111,6 @@ public class ServerSearcher {
 					
 					serchIp += 1;
 					if (serchIp != maxIP && serchIp != netGate && serchIp != ipAddress) {
-						Log.i(CRAActivity.TAG, "Hisdar ip=" + getIPAddress(serchIp));
 						ipListArrayList.get(searchedCount % gSserverThreadCount).add(new Integer(serchIp));
 					}
 	
@@ -226,7 +225,7 @@ public class ServerSearcher {
 		
 		public void run() {
 			for (int i = 0; i < ipAddressList.size(); i++) {
-				Log.i(CRAActivity.TAG, "Search:" + getIPAddress(ipAddressList.get(i)));
+				//Log.i(CRAActivity.TAG, "Search:" + getIPAddress(ipAddressList.get(i)));
 				int localIPAddress = getIPAddress(context);
 				int netMask = getNetMask(context);
 				int id = ipAddressList.get(i) - (netMask & localIPAddress);
@@ -234,6 +233,8 @@ public class ServerSearcher {
 
                 try {
                     Socket socket = new Socket(ipAddress, DEFAULT_PORT);
+
+					Log.i(CRAActivity.TAG, "found server:" + ipAddress);
                     // if connect success, add socket to socket io manager
                     SocketIOManager.getInstance().addSocket(socket);
                     notifyServerSearchEvent(socket);

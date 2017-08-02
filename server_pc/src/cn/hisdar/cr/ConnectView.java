@@ -13,8 +13,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import cn.hisdar.computerremote.common.Global;
-import cn.hisdar.cr.communication.client.ClientEventListener;
-import cn.hisdar.cr.communication.handler.CRServer;
 import cn.hisdar.lib.commandline.CommandLineAdapter;
 import cn.hisdar.lib.configuration.ConfigItem;
 import cn.hisdar.lib.configuration.HConfig;
@@ -24,7 +22,7 @@ import cn.hisdar.lib.ui.HLinearPanel;
 import cn.hisdar.lib.ui.TitlePanel;
 import cn.hisdar.lib.ui.output.HKeyValuePanel;
 
-public class ConnectView extends JPanel implements ClientEventListener {
+public class ConnectView extends JPanel implements SocketAccepterListener {
 
 	/**
 	 * 
@@ -74,6 +72,7 @@ public class ConnectView extends JPanel implements ClientEventListener {
 		cmdServer.addClientEventListener(this);
 		cmdServer.addServerEventListener(this);*/
 		//CRCSManager.getInstance().addServerEventListener(this);
+		SocketAccepter.getInstance().addSocketAccepterListener(this);
 	}
 	
 	private JPanel getServerInforPanel() {
@@ -92,33 +91,6 @@ public class ConnectView extends JPanel implements ClientEventListener {
 		serverInfoPanel.add(autoStartPanel);
 		
 		return serverInfoPanel;
-	}
-
-	public void serverStateEvent(CRServer crServer, int serverState) {
-		if (serverState == CRServer.SERVER_STATE_START) {
-			serverStatePanel.setValue("Æô¶¯");
-			serverStatePanel.getValueLabel().setForeground(new Color(0x32CD32));
-		} else if (serverState == CRServer.SERVER_STATE_STOP) {
-			serverStatePanel.setValue("Í£Ö¹");
-			serverStatePanel.getValueLabel().setForeground(new Color(0xCD2626));
-		}
-		
-		if (crServer != null) {
-			serverPortPanel.setValue(crServer.getServerSocket().getLocalPort() + "");
-
-			try {
-				//String currentIpAddress = InetAddress.getLocalHost().getHostAddress();
-				String currentIpAddress = HInetAddress.getInetAddress();
-				String currentHostName = InetAddress.getLocalHost().getHostName();
-
-				serverIpPanel.setValue(currentIpAddress);
-				serverNamePanel.setValue(currentHostName);
-				checkServerInfo(currentIpAddress, crServer.getServerSocket().getLocalPort() + "");
-			} catch (UnknownHostException e) {
-				HLog.el("get local host information fail");
-				HLog.el(e);
-			}
-		}
 	}
 	
 	private void checkServerInfo(String serverIpAddrese, String port) {
@@ -167,5 +139,32 @@ public class ConnectView extends JPanel implements ClientEventListener {
 		//clientInforPanel.repaint();
 		
 		HLog.il("Finish update ui");
+	}
+
+	@Override
+	public void socketAccepterEvent(int state) {
+		if (state == SocketAccepter.SERVER_STATE_START) {
+			serverStatePanel.setValue("Æô¶¯");
+			serverStatePanel.getValueLabel().setForeground(new Color(0x32CD32));
+		} else if (state == SocketAccepter.SERVER_STATE_STOP) {
+			serverStatePanel.setValue("Í£Ö¹");
+			serverStatePanel.getValueLabel().setForeground(new Color(0xCD2626));
+		}
+		
+		String serverPort = String.format("%d", 5299);
+		serverPortPanel.setValue(serverPort);
+
+		try {
+			//String currentIpAddress = InetAddress.getLocalHost().getHostAddress();
+			String currentIpAddress = HInetAddress.getInetAddress();
+			String currentHostName = InetAddress.getLocalHost().getHostName();
+
+			serverIpPanel.setValue(currentIpAddress);
+			serverNamePanel.setValue(currentHostName);
+			checkServerInfo(currentIpAddress, serverPort);
+		} catch (UnknownHostException e) {
+			HLog.el("get local host information fail");
+			HLog.el(e);
+		}
 	}
 }

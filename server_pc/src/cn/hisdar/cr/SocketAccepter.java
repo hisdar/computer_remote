@@ -1,19 +1,17 @@
-package cn.hisdar.cr.communication.handler;
+package cn.hisdar.cr;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.zip.CRC32;
 
-import cn.hisdar.cr.communication.client.ClientEventListener;
 import cn.hisdar.cr.communication.socket.SocketIOManager;
 import cn.hisdar.lib.log.HLog;
 import cn.hisdar.lib.net.HInetAddress;
 
-public class CRServer {
+public class SocketAccepter {
 
-	private static CRServer crServer = null;
+	private static SocketAccepter socketAccepter = null;
 	
 	public static final int SERVER_STATE_STOP = 0;
 	public static final int SERVER_STATE_START = 1;
@@ -21,26 +19,26 @@ public class CRServer {
 	
 	private ServerSocket serverSocket = null;
 	
-	private ArrayList<ClientEventListener> clientEventListeners = null;
+	private ArrayList<SocketAccepterListener> socketAccepterListeners = null;
 	
 	private int serverPort = 0;
 	private boolean isServerStart;
 	
-	public static CRServer getInstance() {
-		if (crServer == null) {
-			synchronized (CRServer.class) {
-				if (crServer == null) {
-					crServer = new CRServer(5299);
+	public static SocketAccepter getInstance() {
+		if (socketAccepter == null) {
+			synchronized (SocketAccepter.class) {
+				if (socketAccepter == null) {
+					socketAccepter = new SocketAccepter(5299);
 				}				
 			}
 		}
 		
-		return crServer;
+		return socketAccepter;
 	}
 	
-	private CRServer(int port) {
+	private SocketAccepter(int port) {
 		
-		clientEventListeners = new ArrayList<>();
+		socketAccepterListeners = new ArrayList<>();
 		
 		serverPort = port;
 		isServerStart = false;
@@ -81,11 +79,9 @@ public class CRServer {
 
 	private class ServerRunnable implements Runnable {
 
-		private CRServer crServer = null;
 		private ArrayList<Socket> clientSockets = null;
 		
-		public ServerRunnable(CRServer crServer) {
-			this.crServer = crServer;
+		public ServerRunnable(SocketAccepter crServer) {
 			clientSockets = new ArrayList<>();
 		}
 		
@@ -105,6 +101,9 @@ public class CRServer {
 				HLog.il("hostAddress - " + i + ":" + hostAddresses[i]);
 			}
 			
+			// notify server start
+			notifySocketAccepterEvent(SERVER_STATE_START);
+			
 			while (isServerStart) {
 				try {
 					Socket clientSocket = serverSocket.accept();
@@ -118,26 +117,36 @@ public class CRServer {
 					break;
 				}
 			}
+			
+			// notify socket accepter
+			notifySocketAccepterEvent(SERVER_STATE_STOP);
 		}
 	}
 	
-	public void addClientEventListener(ClientEventListener l) {
-		for (int i = 0; i < clientEventListeners.size(); i++) {
-			if (clientEventListeners.get(i) == l) {
+	public void addSocketAccepterListener(SocketAccepterListener l) {
+		for (int i = 0; i < socketAccepterListeners.size(); i++) {
+			if (socketAccepterListeners.get(i) == l) {
 				return;
 			}
 		}
 		
-		clientEventListeners.add(l);
+		socketAccepterListeners.add(l);
 	}
 	
-	public void removeClientEventListener(ClientEventListener l) {
-		clientEventListeners.remove(l);
+	public void removeSocketAccepterListener(SocketAccepterListener l) {
+		socketAccepterListeners.remove(l);
+	}
+	
+	private void notifySocketAccepterEvent(int state) {
+		for (int i = 0; i < socketAccepterListeners.size(); i++) {
+			socketAccepterListeners.get(i).socketAccepterEvent(state);
+		}
 	}
 	
 	private void notifyClientEventListeners(Socket socket) {
-		for (int i = 0; i < clientEventListeners.size(); i++) {
-			clientEventListeners.get(i).clientConnectEvent(socket);
+		for (int i = 0; i < socketAccepterListeners.size(); i++) {
+			socketAccepterListeners.get(i).clientConnectEvent(socket);
 		}
 	}
 }
+

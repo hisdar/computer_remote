@@ -7,7 +7,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import cn.hisdar.cr.communication.data.AbstractData;
-import cn.hisdar.cr.communication.handler.AbstractDataHandler;
 
 public class SocketIO {
 
@@ -75,6 +74,12 @@ public class SocketIO {
 		
 		public void stopServerReader() {
 		    isStop = true;
+		    
+		    for (int i = 0; i < socketIOEventListeners.size(); i++) {
+				socketIOEventListeners.get(i).socketDisconnectEvent(socket);
+			}
+		    
+		    socket = null;
 		}
 		
 		private byte[] readData(InputStream inputStream, int dataLen) {
@@ -82,11 +87,14 @@ public class SocketIO {
 		    int offset = 0;
 		    byte[] data = new byte[dataLen];
 		    int readLen = 0;
-		    while (dataLen > 0) {
+		    while (dataLen > 0 && !isStop) {
 		    	try {
 		    		readLen = inputStream.read(data, offset, dataLen);
 		    	} catch (IOException e) {
 		    		e.printStackTrace();
+
+		    		stopServerReader();
+		    		break;
 		    	}
 
 		        offset += readLen;
@@ -106,6 +114,7 @@ public class SocketIO {
 		    try {
 		        inputStream = socket.getInputStream();
 		    } catch (IOException e) {
+		    	e.printStackTrace();
 		        return;
 		    }
 		
@@ -123,11 +132,22 @@ public class SocketIO {
 	            byte[] dataLenByte = readData(inputStream, 4);
 	            int dataLen = AbstractData.bytesToInt(dataLenByte);
 
+	            if (dataLen <= 0) {
+	            	System.out.println("dataLen" + dataLen);
+	            	for (int i = 0; i < dataLenByte.length; i++) {
+	            		System.out.printf("0x%02x", dataLenByte[i]);
+					}
+	            	
+	            	System.out.println();
+	            }
+	            
 	            // read data
 	            byte[] dataBuf = readData(inputStream, dataLen);
 	
 	            // notify data
-	            dispatch(dataBuf, dataType);
+	            if (!isStop) {
+	            	dispatch(dataBuf, dataType);
+	            }
 		    }
 		}
 	}

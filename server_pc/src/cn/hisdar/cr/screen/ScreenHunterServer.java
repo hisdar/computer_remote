@@ -7,35 +7,49 @@ import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Robot;
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 
+import javax.imageio.ImageIO;
+
+import cn.hisdar.cr.communication.data.ScreenPictureData;
+import cn.hisdar.cr.communication.data.ScreenSizeData;
+import cn.hisdar.cr.communication.handler.HMotionEvent;
+import cn.hisdar.cr.communication.handler.MotionEventHandler;
 import cn.hisdar.cr.communication.handler.MotionEventListener;
-import cn.hisdar.cr.communication.handler.ScreenPictureHandler;
+import cn.hisdar.cr.communication.handler.ScreenSizeListener;
+import cn.hisdar.cr.communication.socket.SocketIOManager;
 import cn.hisdar.cr.controler.GestureListener;
 import cn.hisdar.cr.controler.GestureParser;
+import cn.hisdar.lib.log.HLog;
 
-public class ScreenHunterServer implements MotionEventListener, GestureListener {
+public class ScreenHunterServer implements MotionEventListener, GestureListener, ScreenSizeListener {
 
 	private static ScreenHunterServer screenHunterServer = null;
 	private ArrayList<ScreenHunterListener> listeners = null;
-	private ScreenHunterThread screenHunterThread = null;
-
 
 	private boolean sendFlag = false;
 	private Thread screenPictureSendThread = null;
 	private double pinchSize = 0;
+	private int phoneScreenWidth = 1080;
+	private int phoneScreenHeight = 1920;
+	private int pcScreenWidth = 1280;
+	private int pcScreenHeight = 800;
 	
 	private ScreenHunterServer() {
 		
-		GestureParser gestureParser = GestureParser.getInstance();
-		gestureParser.addGestureListener(this);
+		pcScreenWidth = ((int)Toolkit.getDefaultToolkit().getScreenSize().width);
+		pcScreenHeight = ((int)Toolkit.getDefaultToolkit().getScreenSize().height);
 		
-		//EventDispatcher eventDispatcher = EventDispatcher.getInstance();
-		//eventDispatcher.addHMotionEventListener(this);
+		GestureParser.getInstance().addGestureListener(this);
+		MotionEventHandler.getInstance().addMotionEventListener(this);
 		
 		listeners = new ArrayList<>();
-		startServer();
 	}
 	
 	public static ScreenHunterServer getInstance() {
@@ -66,21 +80,6 @@ public class ScreenHunterServer implements MotionEventListener, GestureListener 
 				listeners.remove(i);
 				return;
 			}
-		}
-	}
-	
-	public void startServer() {
-		if (screenHunterThread == null) {
-			screenHunterThread = new ScreenHunterThread();
-			screenHunterThread.start();
-		} else {
-			return;
-		}
-	}
-	
-	public void stopServer() {
-		if (screenHunterThread != null) {
-			screenHunterServer = null;
 		}
 	}
 	
@@ -140,12 +139,9 @@ public class ScreenHunterServer implements MotionEventListener, GestureListener 
     	// 1. 根据手机的分辨率比例，屏幕的尺寸，算出一个尺寸，这个尺寸的比例是手机屏幕的比例，这个尺寸的图片可以完整放下电脑屏幕的图片
     	// get picture size
 		// 用电脑的屏幕尺寸，通过手机的分辨率计算，取小的一边
-		int phoneScreenWidth = 1080;
-		int phoneScreenHeight = 1920;
 		double phoneScreenRate = 1.0 * phoneScreenHeight / phoneScreenWidth;
 
-		int pcScreenWidth = 1280;
-		int pcScreenHeight = 800;
+
 		
 		int imageWidth = pcScreenWidth;
 		int imageHeight = (int)(imageWidth * phoneScreenRate);
@@ -211,7 +207,7 @@ public class ScreenHunterServer implements MotionEventListener, GestureListener 
 		return rectangle;
     }
     
-    public ScreenPictureHandler getScreenHunterData() {
+    public ScreenPictureData getScreenPictureData() {
     	int screenWidth = ((int)java.awt.Toolkit.getDefaultToolkit().getScreenSize().width);
 		int screenHeight = ((int)java.awt.Toolkit.getDefaultToolkit().getScreenSize().height); 
 		
@@ -238,21 +234,11 @@ public class ScreenHunterServer implements MotionEventListener, GestureListener 
 		Rectangle rect = getScreenPictureRect(point);
 		//HLog.il(rect);
 		screenImage = crop(screenImage, rect.x, rect.y, rect.width, rect.height);
-		
-		ScreenPictureHandler screenHunterData = new ScreenPictureHandler();
-		screenHunterData.setScreenImage(screenImage);
-		screenHunterData.setMouseLocation(point);
-		
-		return screenHunterData;
+
+		ScreenPictureData screenPictureData = new ScreenPictureData(encode(screenImage));
+		return screenPictureData;
     }
 	
-	private class ScreenHunterThread extends Thread {
-		
-		public void run() {
-
-		}
-	}
-
 	@Override
 	public void pinckBiggerEvemt(double value) {
 		pinchSize += value;
@@ -273,8 +259,9 @@ public class ScreenHunterServer implements MotionEventListener, GestureListener 
 			while (sendFlag == true) {
 				sendFlag = false;
 				
-				ScreenPictureHandler shData = ScreenHunterServer.getInstance().getScreenHunterData();
-				//CRCSManager.getInstance().screenPictureChangeEvent(shData);
+				ScreenPictureData shData = ScreenHunterServer.getInstance().getScreenPictureData();
+				SocketIOManager.getInstance().sendDataToClient(shData, null);
+				//HLog.dl("Send screen picture to client finished");
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
@@ -286,7 +273,7 @@ public class ScreenHunterServer implements MotionEventListener, GestureListener 
 	}
 
 	@Override
-	public void motionEvent(cn.hisdar.cr.communication.handler.HMotionEvent event) {
+	public void motionEvent(HMotionEvent event) {
 		sendFlag = true;
 		if (screenPictureSendThread == null || !screenPictureSendThread.isAlive()) {
 			screenPictureSendThread = new Thread(new ScreenPictureSendRunnable());
@@ -294,5 +281,34 @@ public class ScreenHunterServer implements MotionEventListener, GestureListener 
 		}
 	}
 
-	
+    public byte[] encode(BufferedImage screenImage) {
+    	ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    	
+    	try {
+			ImageIO.write(screenImage, "png", byteArrayOutputStream);
+		} catch (IOException e) {
+			HLog.el(e);
+			return null;
+		}
+    	
+        return byteArrayOutputStream.toByteArray();
+    }
+
+    public boolean decode(BufferedImage screenImage, byte[] data, Socket socket) {
+    	ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data);
+    	try {
+			screenImage = ImageIO.read(byteArrayInputStream);
+		} catch (IOException e) {
+			HLog.el(e);
+			return false;
+		}
+    	
+        return true;
+    }
+
+	@Override
+	public void screenSizeEvent(ScreenSizeData screenSizeData) {
+		phoneScreenHeight = screenSizeData.getHeight();
+		phoneScreenWidth = screenSizeData.getWidth();
+	}
 }

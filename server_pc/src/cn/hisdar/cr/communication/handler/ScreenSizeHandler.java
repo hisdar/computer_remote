@@ -1,5 +1,6 @@
 package cn.hisdar.cr.communication.handler;
 
+import java.net.Socket;
 import java.util.ArrayList;
 
 import cn.hisdar.cr.communication.data.AbstractData;
@@ -61,7 +62,7 @@ public class ScreenSizeHandler extends AbstractDataHandler {
 	}
 
 	@Override
-	public boolean decode(byte[] data) {
+	public boolean decode(byte[] data, Socket socket) {
 		if (data.length != 8) {
 			return false;
 		}

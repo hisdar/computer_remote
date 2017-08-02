@@ -3,6 +3,7 @@ package cn.hisdar.cr.controler;
 import java.util.ArrayList;
 
 import cn.hisdar.cr.communication.handler.HMotionEvent;
+import cn.hisdar.cr.communication.handler.MotionEventHandler;
 import cn.hisdar.cr.communication.handler.MotionEventListener;
 import cn.hisdar.cr.event.PinchPointer;
 import cn.hisdar.cr.event.Pointer;
@@ -20,8 +21,7 @@ public class GestureParser implements MotionEventListener {
 		distances = new ArrayList<>();
 		gestureListeners = new ArrayList<>();
 		
-		//EventDispatcher eventDispatcher = EventDispatcher.getInstance();
-		//eventDispatcher.addHMotionEventListener(this);
+		MotionEventHandler.getInstance().addMotionEventListener(this);
 	}
 	
 	public static GestureParser getInstance() {

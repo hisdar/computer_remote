@@ -68,7 +68,7 @@ public class SocketIOManager implements SocketIOEventListener {
 		for (int i = 0; i < dataHandlers.size(); i++) {
 			AbstractDataHandler dataHandler = dataHandlers.get(i);
 			if (dataHandler.getDataType() == dataType) {
-				dataHandler.decode(data);
+				dataHandler.decode(data, socket);
 			}
 		}
 	}
@@ -90,15 +90,42 @@ public class SocketIOManager implements SocketIOEventListener {
 					return socketIOs.get(i).sendData(data);
 				}
 			}
+			
+			//HLog.dl("No socket found in socketIOs");
 		} else {
 			// send to all the connection
+			int sendCount = 0;
 			for (int i = 0; i < socketIOs.size(); i++) {
 				if (socketIOs.get(i).getSocket() != null) {
-					return socketIOs.get(i).sendData(data);
+					socketIOs.get(i).sendData(data);
+					sendCount += 1;
 				}
 			}
+			
+			//HLog.dl("Send socket count:" + sendCount);
 		}
 
 		return true;
+	}
+
+	@Override
+	public void socketDisconnectEvent(Socket socket) {
+		
+		System.out.println("socket disconnect");
+		
+		sockets.remove(socket);
+		
+		SocketIO socketIO = null;
+		for (int i = 0; i < socketIOs.size(); i++) {
+			if (socketIOs.get(i).getSocket() == socket) {
+				socketIO = socketIOs.get(i);
+				break;
+			}
+		}
+		
+		if (socketIO != null) {
+			socketIO.removeSocketIOEventListener(this);
+			socketIOs.remove(socketIO);
+		}
 	}
 }

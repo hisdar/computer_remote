@@ -12,7 +12,6 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import cn.hisdar.computerremote.common.Global;
-import cn.hisdar.cr.communication.handler.CRServer;
 import cn.hisdar.cr.setting.ComputerRemoteSettingDialog;
 import cn.hisdar.lib.configuration.HConfig;
 import cn.hisdar.lib.ui.UIAdapter;
@@ -32,7 +31,7 @@ public class ServerControlerView extends JPanel implements ActionListener {
 	
 	private JButton settingButton;
 	
-	private CRServer computerRemoteServer;
+	private SocketAccepter computerRemoteServer;
 	
 	private boolean isServerStart;
 	
@@ -42,7 +41,7 @@ public class ServerControlerView extends JPanel implements ActionListener {
 	public ServerControlerView() {
 		
 		applicationConfig = HConfig.getInstance(Global.APPLICATION_CONFIG_FILE);
-		computerRemoteServer = CRServer.getInstance();
+		computerRemoteServer = SocketAccepter.getInstance();
 		
 		setOpaque(true);
 		setBackground(new Color(0xbcc7d8));
