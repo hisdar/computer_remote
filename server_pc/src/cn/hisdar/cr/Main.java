@@ -57,7 +57,6 @@ public class Main {
 
 		MouseControler mouseControler = new MouseControler();
 		eventDispatcher.addHMotionEventListener(mouseControler);
-		eventDispatcher.addHMouseEventListener(mouseControler);
 		
 		KeyControler keyControler = new KeyControler();
 		eventDispatcher.addHKeyEventListener(keyControler);

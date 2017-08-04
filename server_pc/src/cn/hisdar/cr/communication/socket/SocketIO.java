@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import cn.hisdar.cr.communication.data.AbstractData;
+import cn.hisdar.lib.log.HLog;
 
 public class SocketIO {
 
@@ -82,14 +83,31 @@ public class SocketIO {
 		    socket = null;
 		}
 		
+		// TODO: this function should be recode
 		private byte[] readData(InputStream inputStream, int dataLen) {
 		
 		    int offset = 0;
-		    byte[] data = new byte[dataLen];
+		    byte[] data = null;
+		    
+		    try {
+		    	data = new byte[dataLen];
+		    } catch (NegativeArraySizeException e) {
+		    	e.printStackTrace();
+		    	HLog.el("datalen=" + dataLen);
+		    	return null;
+		    }
+		    
 		    int readLen = 0;
 		    while (dataLen > 0 && !isStop) {
 		    	try {
 		    		readLen = inputStream.read(data, offset, dataLen);
+		    		if (readLen < 0) {
+		    			if (isSocketClosed(socket)) {
+		    				stopServerReader();
+		    				return null;
+		    			}
+		    			readLen = 0;
+		    		}
 		    	} catch (IOException e) {
 		    		e.printStackTrace();
 
@@ -132,15 +150,6 @@ public class SocketIO {
 	            byte[] dataLenByte = readData(inputStream, 4);
 	            int dataLen = AbstractData.bytesToInt(dataLenByte);
 
-	            if (dataLen <= 0) {
-	            	System.out.println("dataLen" + dataLen);
-	            	for (int i = 0; i < dataLenByte.length; i++) {
-	            		System.out.printf("0x%02x", dataLenByte[i]);
-					}
-	            	
-	            	System.out.println();
-	            }
-	            
 	            // read data
 	            byte[] dataBuf = readData(inputStream, dataLen);
 	
@@ -186,4 +195,13 @@ public class SocketIO {
 
         return true;
     }
+    
+	public boolean isSocketClosed(Socket socket) {
+		try {
+			socket.sendUrgentData(0xFF);
+			return false;
+		} catch (Exception se) {
+			return true;
+		}
+	}
 }

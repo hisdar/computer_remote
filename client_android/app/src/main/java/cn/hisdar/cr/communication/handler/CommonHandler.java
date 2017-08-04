@@ -8,7 +8,7 @@ import cn.hisdar.cr.communication.data.AbstractData;
  * Created by Hisdar on 2017/7/26.
  */
 
-public class CommonHandler extends AbstractDataHandler {
+public class CommonHandler extends AbstractHandler {
 
     private byte[] data = null;
 

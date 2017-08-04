@@ -31,6 +31,7 @@ import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 
@@ -142,17 +143,28 @@ public class CRAActivity extends AppCompatActivity
             }
         }
 
-        if (isServerView) {
-            for (int i = 0; i < serverTextViews.size(); i++) {
-                if (serverInfoDatas.get(i).getId() == arg0.getId()) {
-                    serverSearcher.stopSearch();
-                    autoSearchButton.setText(TEXT_START_SEARCH);
-                    messageView.setText(MESSAGE_ACTION);
-                    connectToServerButtonActionHandler(CRAActivity.this, serverInfoDatas.get(i).getIpAddress(), serverInfoDatas.get(i).getPort());
-                    break;
-                }
+        if (!isServerView) {
+            return;
+        }
+
+        // find serverInfoData
+        ServerInfoData serverInfoData = null;
+        for (int i = 0; i < serverTextViews.size(); i++) {
+            if (serverInfoDatas.get(i).getId() == arg0.getId()) {
+                serverInfoData = serverInfoDatas.get(i);
+                break;
             }
         }
+
+        if (serverInfoData == null) {
+            Log.e(CRAActivity.TAG, "server info data not found, id=" + arg0.getId());
+            return;
+        }
+
+        serverSearcher.stopSearch();
+        autoSearchButton.setText(TEXT_START_SEARCH);
+        messageView.setText(MESSAGE_ACTION);
+        connectToServerButtonActionHandler(CRAActivity.this, serverInfoData.getIpAddress(), serverInfoData.getPort());
     }
 
     private void connectToServerButtonActionHandler(Context context, String ipAddress, String portString) {
@@ -176,10 +188,26 @@ public class CRAActivity extends AppCompatActivity
         // try to connect to server
         ServerCommunication sc = ServerCommunication.getInstance();
         sc.disconnect(getMainLooper().getThread(), ipAddress, port);
-        boolean ret = sc.connectToCmdServer(getMainLooper().getThread(), ipAddress, port, 5300);
+        boolean ret = sc.connectToCmdServer(getMainLooper().getThread(), ipAddress, port, 5299);
         if (!ret) {
             showMessage("提示", "服务器连接失败");
             return;
+        }
+
+        // only keep the selected connection, delete all the others
+        for (int i = 0; i < serverInfoDatas.size(); i++) {
+            String curIP = serverInfoDatas.get(i).getIpAddress();
+            if (!curIP.equals(ipAddress)) {
+                Socket socket = SocketIOManager.getInstance().getSocketByIP(curIP);
+                if (!socket.isClosed()) {
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                SocketIOManager.getInstance().removeSocketByIP(curIP);
+            }
         }
 
         saveServerInfo();
@@ -189,9 +217,7 @@ public class CRAActivity extends AppCompatActivity
         Log.i(TAG, "jump to mouse control activity");
         // jump to control activity
         Intent intent = new Intent(context, MouseControlActivity.class);
-        //����Intent��ͨ��ֵ�ķ�ʽ
         intent.putExtra("skip", "����MainActivity��������ֵ��");
-        //��תActivity
         startActivityForResult(intent, MOUSE_CONTROL_ACTIVITY_CODE);
     }
 
@@ -303,6 +329,10 @@ public class CRAActivity extends AppCompatActivity
         for (int i = length; i > 0; i--) {
             serverListView.removeView(serverTextViews.get(i - 1));
             serverTextViews.remove(i - 1);
+        }
+
+        while (serverInfoDatas.size() > 0) {
+            serverInfoDatas.remove(0);
         }
     }
 

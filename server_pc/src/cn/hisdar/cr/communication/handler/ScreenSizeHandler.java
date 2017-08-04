@@ -11,7 +11,7 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
  * Created by Hisdar on 2017/7/22.
  */
 
-public class ScreenSizeHandler extends AbstractDataHandler {
+public class ScreenSizeHandler extends AbstractHandler {
 
 	private static ScreenSizeHandler screenSizeHandler = null;
 	private ScreenSizeData screenSizeData = null;

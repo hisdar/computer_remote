@@ -7,6 +7,7 @@ public abstract class AbstractData {
 	public static final int DATA_TYPE_MOTION_EVENT   = 0x10004;
 	public static final int DATA_TYPE_REQUEST        = 0x10005;
     public static final int DATA_TYPE_SERVER_INFO    = 0x10006;
+	public static final int DATA_TYPE_MOUSE_BUTTON   = 0x10007;
 
     abstract public int getDataType();
 
@@ -15,6 +16,7 @@ public abstract class AbstractData {
 	abstract public byte[] encode();
 
 	public static byte[] longToBytes(long data) {
+		
 		// the length of long is 8 bytes
 		byte[] bytesData = new byte[8];
 		for (int i = 0; i < bytesData.length; i++) {
@@ -25,6 +27,11 @@ public abstract class AbstractData {
 	}
 
 	public static long bytesToLong(byte[] bytesData) {
+		
+		if (bytesData == null) {
+			return 0;
+		}
+		
 		// the length of long is 8 bytes
 		long number = 0;
 		for (int i = 0; i < bytesData.length; i++) {
@@ -35,6 +42,7 @@ public abstract class AbstractData {
 	}
 
 	public static byte[] intToBytes(int data) {
+		
 		// the length of long is 4 bytes
 		byte[] bytesData = new byte[4];
 		for (int i = 0; i < bytesData.length; i++) {
@@ -45,6 +53,11 @@ public abstract class AbstractData {
 	}
 
 	public static int bytesToInt(byte[] bytesData) {
+		
+		if (bytesData == null) {
+			return 0;
+		}
+		
 		// the length of long is 4 bytes
 		int number = 0;
 		for (int i = 0; i < bytesData.length; i++) {

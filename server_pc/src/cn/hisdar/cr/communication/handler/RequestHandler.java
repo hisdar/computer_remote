@@ -7,22 +7,22 @@ import cn.hisdar.cr.communication.data.AbstractData;
 import cn.hisdar.cr.communication.data.RequestData;
 import cn.hisdar.cr.communication.socket.SocketIOManager;
 
-public class RequestDataHandler extends AbstractDataHandler {
+public class RequestHandler extends AbstractHandler {
 
-	private static RequestDataHandler requestDataHandler = null; 
+	private static RequestHandler requestDataHandler = null;
 	private RequestData requestData = null;
 	private ArrayList<RequestEventListener> requestEventListeners = null;
 
-	private RequestDataHandler() {
+	private RequestHandler() {
 		requestEventListeners = new ArrayList<>();
 		SocketIOManager.getInstance().addDataHandler(this);
 	}
 
-	public static RequestDataHandler getInstance() {
+	public static RequestHandler getInstance() {
 		if (requestDataHandler == null) {
-			synchronized (RequestDataHandler.class) {
+			synchronized (RequestHandler.class) {
 				if (requestDataHandler == null) {
-					requestDataHandler = new RequestDataHandler();
+					requestDataHandler = new RequestHandler();
 				}
 			}
 		}

@@ -8,14 +8,12 @@ import android.view.MotionEvent;
 
 import com.cn.hisdar.cra.MotionEventTool;
 import com.cn.hisdar.cra.activity.CRAActivity;
-import com.cn.hisdar.cra.common.Global;
 import com.cn.hisdar.cra.server.CmdServerReader;
 
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import cn.hisdar.cr.communication.socket.SocketIO;
 import cn.hisdar.cr.communication.socket.SocketIOManager;
 
 @SuppressLint("HandlerLeak")
@@ -86,8 +84,14 @@ public class ServerCommunication extends Thread {
 	}
 
 	public boolean connectToCmdServer(Thread owner, String ipAddress, int cmd_server_port, int data_server_port) {
-	
+
 		Log.i(CRAActivity.TAG, "connect to cmd server");
+
+		if (SocketIOManager.getInstance().getSocketByIP(ipAddress) != null) {
+			Log.i(CRAActivity.TAG, ipAddress + " already connected");
+			return true;
+		}
+
 		Message connectToServerMessage = new Message();
 		Bundle data = new Bundle();
 		data.putString(IP_ADDRESS, ipAddress);

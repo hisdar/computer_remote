@@ -7,7 +7,7 @@ import cn.hisdar.cr.communication.data.AbstractData;
 import cn.hisdar.cr.communication.data.ScreenPictureData;
 import cn.hisdar.cr.communication.socket.SocketIOManager;
 
-public class ScreenPictureHandler extends AbstractDataHandler {
+public class ScreenPictureHandler extends AbstractHandler {
 
 	private static ScreenPictureHandler screenPictureHandler = null;
 	

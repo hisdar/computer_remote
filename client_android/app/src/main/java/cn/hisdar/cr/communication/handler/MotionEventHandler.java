@@ -11,7 +11,7 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
  * Created by Hisdar on 2017/7/22.
  */
 
-public class MotionEventHandler extends AbstractDataHandler {
+public class MotionEventHandler extends AbstractHandler {
 
 	private static MotionEventHandler motionEventHandler = null;
 	

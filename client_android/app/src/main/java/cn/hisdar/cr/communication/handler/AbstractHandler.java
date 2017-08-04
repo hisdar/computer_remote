@@ -6,7 +6,7 @@ package cn.hisdar.cr.communication.handler;
 
 import java.net.Socket;
 
-public abstract class AbstractDataHandler {
+public abstract class AbstractHandler {
 
     abstract public int getDataType();
     abstract public boolean decode(byte[] data, Socket socket);

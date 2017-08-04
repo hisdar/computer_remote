@@ -82,6 +82,7 @@ public class SocketIO {
 		    socket = null;
 		}
 		
+		// TODO: this function should be recode
 		private byte[] readData(InputStream inputStream, int dataLen) {
 		
 		    int offset = 0;
@@ -90,6 +91,13 @@ public class SocketIO {
 		    while (dataLen > 0 && !isStop) {
 		    	try {
 		    		readLen = inputStream.read(data, offset, dataLen);
+		    		if (readLen < 0) {
+		    			if (isSocketClosed(socket)) {
+		    				stopServerReader();
+		    				return null;
+		    			}
+		    			readLen = 0;
+		    		}
 		    	} catch (IOException e) {
 		    		e.printStackTrace();
 
@@ -177,4 +185,13 @@ public class SocketIO {
 
         return true;
     }
+    
+	public boolean isSocketClosed(Socket socket) {
+		try {
+			socket.sendUrgentData(0xFF);
+			return false;
+		} catch (Exception se) {
+			return true;
+		}
+	}
 }

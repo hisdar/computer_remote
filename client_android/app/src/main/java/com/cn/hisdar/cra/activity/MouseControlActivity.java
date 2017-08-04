@@ -30,12 +30,13 @@ import cn.hisdar.cr.communication.CRClient;
 import cn.hisdar.cr.communication.ServerCommunication;
 import cn.hisdar.cr.communication.data.AbstractData;
 import cn.hisdar.cr.communication.data.MotionEventData;
+import cn.hisdar.cr.communication.data.MouseButtonData;
 import cn.hisdar.cr.communication.data.RequestData;
 import cn.hisdar.cr.communication.data.ScreenPictureData;
 import cn.hisdar.cr.communication.data.ScreenSizeData;
 import cn.hisdar.cr.communication.handler.HMotionEvent;
-import cn.hisdar.cr.communication.handler.RequestDataHandler;
 import cn.hisdar.cr.communication.handler.RequestEventListener;
+import cn.hisdar.cr.communication.handler.RequestHandler;
 import cn.hisdar.cr.communication.handler.ScreenPictureHandler;
 import cn.hisdar.cr.communication.handler.ScreenPictureListener;
 import cn.hisdar.cr.communication.socket.SocketIOManager;
@@ -84,7 +85,7 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
 
         CRClient dataServer = CRClient.getInstance();
 
-		RequestDataHandler.getInstance().addRequestEventListener(this);
+		RequestHandler.getInstance().addRequestEventListener(this);
 		ScreenPictureHandler.getInstance().addScreenPictureListener(this);
 		sendScreenSize();
 	}
@@ -124,13 +125,17 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
 	}
 
 	private void buttonTouchEvent(MotionEvent arg1, int buttonId) {
+
+		MouseButtonData mouseButtonData = new MouseButtonData();
+		mouseButtonData.setButtioID(buttonId);
+
 		if (arg1.getAction() == MotionEvent.ACTION_DOWN) {
-			ServerCommunication.getInstance()
-				.sendMouseButtonEvent(getMainLooper().getThread(), buttonId, MotionEvent.ACTION_DOWN);
+			mouseButtonData.setActionCode(HMotionEvent.ACTION_DOWN);
 		} else if (arg1.getAction() == MotionEvent.ACTION_UP) {
-			ServerCommunication.getInstance()
-			.sendMouseButtonEvent(getMainLooper().getThread(), buttonId, MotionEvent.ACTION_UP);
+			mouseButtonData.setActionCode(HMotionEvent.ACTION_UP);
 		}
+
+		SocketIOManager.getInstance().sendDataToClient(mouseButtonData, null);
 	}
 	
 	private void keyEvent(int keyCode, int keyValue) {
@@ -163,10 +168,7 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
 		Log.i(CRAActivity.TAG, "send motion event data");
 		MotionEventData motionEventData = new MotionEventData();
 		motionEventData.setMotionEvent(hMotionEvent);
-		//CRClient.getInstance().sendData(motionEventData);
 		SocketIOManager.getInstance().sendDataToClient(motionEventData, null);
-
-		//ServerCommunication.getInstance().sendTouchEvent(getMainLooper().getThread(), e);
 	}
 
 	@Override

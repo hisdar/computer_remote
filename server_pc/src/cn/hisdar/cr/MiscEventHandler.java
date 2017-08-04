@@ -1,22 +1,20 @@
 package cn.hisdar.cr;
 
-import java.io.IOException;
 import java.net.InetAddress;
-import java.net.Socket;
 import java.net.UnknownHostException;
 
 import cn.hisdar.cr.communication.data.AbstractData;
 import cn.hisdar.cr.communication.data.RequestData;
 import cn.hisdar.cr.communication.data.ServerInfoData;
-import cn.hisdar.cr.communication.handler.RequestDataHandler;
 import cn.hisdar.cr.communication.handler.RequestEventListener;
+import cn.hisdar.cr.communication.handler.RequestHandler;
 import cn.hisdar.cr.communication.socket.SocketIOManager;
 import cn.hisdar.lib.log.HLog;
 
 public class MiscEventHandler implements RequestEventListener {
 
 	public MiscEventHandler() {
-		RequestDataHandler.getInstance().addRequestEventListener(this);
+		RequestHandler.getInstance().addRequestEventListener(this);
 	}
 	
 	@Override

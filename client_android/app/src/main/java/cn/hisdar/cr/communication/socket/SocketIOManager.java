@@ -4,7 +4,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import cn.hisdar.cr.communication.data.AbstractData;
-import cn.hisdar.cr.communication.handler.AbstractDataHandler;
+import cn.hisdar.cr.communication.handler.AbstractHandler;
 
 /***
  * This class is using to manage SocketIO and data handlers
@@ -15,11 +15,9 @@ public class SocketIOManager implements SocketIOEventListener {
 
 	private static SocketIOManager socketIOManager = null;
 	private ArrayList<SocketIO> socketIOs = null;
-	private ArrayList<Socket> sockets = null;
-	private ArrayList<AbstractDataHandler> dataHandlers = null;
+	private ArrayList<AbstractHandler> dataHandlers = null;
 	
 	private SocketIOManager() {
-		sockets = new ArrayList<>();
 		socketIOs = new ArrayList<>();
 		dataHandlers = new ArrayList<>();
 	}
@@ -37,19 +35,18 @@ public class SocketIOManager implements SocketIOEventListener {
 	}
 	
 	public void addSocket(Socket socket) {
-		for (int i = 0; i < sockets.size(); i++) {
-			if (sockets.get(i) == socket) {
+		for (int i = 0; i < socketIOs.size(); i++) {
+			if (socketIOs.get(i).getSocket() == socket) {
 				return;
 			}
 		}
-		
-		sockets.add(socket);
+
 		SocketIO socketIO = new SocketIO(socket);
 		socketIO.addSocketIOEventListener(this);
 		socketIOs.add(socketIO);
 	}
 	
-	public void addDataHandler(AbstractDataHandler dataHandler) {
+	public void addDataHandler(AbstractHandler dataHandler) {
 		for (int i = 0; i < dataHandlers.size(); i++) {
 			if (dataHandlers.get(i) == dataHandler) {
 				return;
@@ -59,14 +56,44 @@ public class SocketIOManager implements SocketIOEventListener {
 		dataHandlers.add(dataHandler);
 	}
 	
-	public void removeDataHandler(AbstractDataHandler dataHandler) {
+	public void removeDataHandler(AbstractHandler dataHandler) {
 		dataHandlers.remove(dataHandler);
+	}
+
+	public Socket getSocketByIP(String ip) {
+		for (int i = 0; i < socketIOs.size(); i++) {
+			String curIP = socketIOs.get(i).getSocket().getInetAddress().getHostAddress();
+			if (curIP.equals(ip)) {
+				return socketIOs.get(i).getSocket();
+			}
+		}
+
+		return null;
+	}
+
+	public void removeSocketByIP(String ip) {
+		for (int i = 0; i < socketIOs.size(); i++) {
+			String curIP = socketIOs.get(i).getSocket().getInetAddress().getHostAddress();
+			if (curIP.equals(ip)) {
+				socketIOs.remove(i);
+				return ;
+			}
+		}
+	}
+
+	public ArrayList<Socket> getAllSockets() {
+		ArrayList<Socket> allSockets = new ArrayList<>();
+		for (int i = 0; i < socketIOs.size(); i++) {
+			allSockets.add(socketIOs.get(i).getSocket());
+		}
+
+		return allSockets;
 	}
 
 	@Override
 	public void socketIOEvent(byte[] data, int dataType, Socket socket) {
 		for (int i = 0; i < dataHandlers.size(); i++) {
-			AbstractDataHandler dataHandler = dataHandlers.get(i);
+			AbstractHandler dataHandler = dataHandlers.get(i);
 			if (dataHandler.getDataType() == dataType) {
 				dataHandler.decode(data, socket);
 			}
@@ -110,11 +137,7 @@ public class SocketIOManager implements SocketIOEventListener {
 
 	@Override
 	public void socketDisconnectEvent(Socket socket) {
-		
-		System.out.println("socket disconnect");
-		
-		sockets.remove(socket);
-		
+
 		SocketIO socketIO = null;
 		for (int i = 0; i < socketIOs.size(); i++) {
 			if (socketIOs.get(i).getSocket() == socket) {

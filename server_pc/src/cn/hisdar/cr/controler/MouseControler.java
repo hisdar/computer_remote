@@ -7,14 +7,17 @@ import java.awt.event.InputEvent;
 import java.util.ArrayList;
 
 import cn.hisdar.computerremote.common.Global;
+import cn.hisdar.cr.communication.data.MouseButtonData;
 import cn.hisdar.cr.communication.handler.HMotionEvent;
 import cn.hisdar.cr.communication.handler.MotionEventHandler;
 import cn.hisdar.cr.communication.handler.MotionEventListener;
+import cn.hisdar.cr.communication.handler.MouseButtonEventHandler;
+import cn.hisdar.cr.communication.handler.MouseButtonEventListener;
 import cn.hisdar.cr.event.HMouseEvent;
 import cn.hisdar.cr.event.HMouseEventListener;
 import cn.hisdar.lib.log.HLog;
 
-public class MouseControler implements HMouseEventListener, MotionEventListener {
+public class MouseControler implements MouseButtonEventListener, MotionEventListener {
 
 	private ArrayList<HMotionEvent> motionEvents = null;
 	
@@ -28,6 +31,7 @@ public class MouseControler implements HMouseEventListener, MotionEventListener 
 	public MouseControler() {
 		motionEvents = new ArrayList<>();
 		MotionEventHandler.getInstance().addMotionEventListener(this);
+		MouseButtonEventHandler.getInstance().addMouseButtonEventListener(this);
 	}
 
 	@Override
@@ -54,13 +58,6 @@ public class MouseControler implements HMouseEventListener, MotionEventListener 
 				break;
 			}
 			
-//			if (event.getPointers().get(0).getId() != lastEvent.getPointers().get(0).getId()) {
-//				HLog.dl("not the same finger");
-//				break;
-//			}
-			
-			//float x = event.getPointers().get(0).getX() - lastEvent.getPointers().get(0).getX();
-			//float y = event.getPointers().get(0).getY() - lastEvent.getPointers().get(0).getY();
 			float x = event.getX(0) - lastEvent.getX(0);
 			float y = event.getY(0) - lastEvent.getY(0);
 			
@@ -165,13 +162,17 @@ public class MouseControler implements HMouseEventListener, MotionEventListener 
 	}
 	
 	@Override
-	public void mouseEvent(HMouseEvent event) {
-		if (event.buttonId == Global.BUTTON1) {
-			mouseButtonAction(InputEvent.BUTTON1_MASK, event.getValue());
-		} else if (event.buttonId == Global.BUTTON3) {
-			mouseButtonAction(InputEvent.BUTTON3_MASK, event.getValue());
+	public void mouseButtonEvent(MouseButtonData mouseButtonData) {
+		if (mouseButtonData.getButtioID() == MouseButtonData.BUTTON1) {
+			
+			mouseButtonAction(InputEvent.BUTTON1_MASK, mouseButtonData.getActionCode());
+			
+		} else if (mouseButtonData.getButtioID() == MouseButtonData.BUTTON3) {
+			
+			mouseButtonAction(InputEvent.BUTTON3_MASK, mouseButtonData.getActionCode());
+			
 		} else {
-			HLog.el("Unhandled mouse event:" + event.toString());
+			HLog.el("Unhandled mouse event:" + mouseButtonData.toString());
 		}
 	}
 }

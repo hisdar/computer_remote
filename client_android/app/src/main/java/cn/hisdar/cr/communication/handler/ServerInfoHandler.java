@@ -11,7 +11,7 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
  * Created by Hisdar on 2017/8/1.
  */
 
-public class ServerInfoHandler extends AbstractDataHandler {
+public class ServerInfoHandler extends AbstractHandler {
 
     private static int serverId = 0x1001;
     private static ServerInfoHandler serverInfoHandler = null;
@@ -66,7 +66,7 @@ public class ServerInfoHandler extends AbstractDataHandler {
         }
 
         serverInfoData.setIpAddress(socket.getInetAddress().getHostAddress());
-        serverInfoData.setPort(String.format("%d", socket.getLocalPort()));
+        serverInfoData.setPort(String.format("%d", 5299));
         serverInfoData.setId(allocServerId());
 
         // notify server info event to listeners
