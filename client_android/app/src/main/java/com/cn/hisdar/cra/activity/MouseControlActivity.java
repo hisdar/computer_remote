@@ -25,10 +25,11 @@ import com.cn.hisdar.cra.common.Global;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
+import java.net.Socket;
 
 import cn.hisdar.cr.communication.CRClient;
-import cn.hisdar.cr.communication.ServerCommunication;
 import cn.hisdar.cr.communication.data.AbstractData;
+import cn.hisdar.cr.communication.data.KeyEventData;
 import cn.hisdar.cr.communication.data.MotionEventData;
 import cn.hisdar.cr.communication.data.MouseButtonData;
 import cn.hisdar.cr.communication.data.RequestData;
@@ -39,6 +40,7 @@ import cn.hisdar.cr.communication.handler.RequestEventListener;
 import cn.hisdar.cr.communication.handler.RequestHandler;
 import cn.hisdar.cr.communication.handler.ScreenPictureHandler;
 import cn.hisdar.cr.communication.handler.ScreenPictureListener;
+import cn.hisdar.cr.communication.socket.SocketDisconnectListener;
 import cn.hisdar.cr.communication.socket.SocketIOManager;
 
 /**
@@ -49,7 +51,7 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
  */
 @SuppressLint("ClickableViewAccessibility") public class MouseControlActivity extends Activity
 	implements OnTouchListener, HResponseDataListener, HServerEventListener,
-		RequestEventListener, ScreenPictureListener {
+		RequestEventListener, ScreenPictureListener, SocketDisconnectListener {
 	
 	private static final int SHOW_RESPONSE_MESSAGE 	= 0x10001;
 	private static final int SERVER_EVENT 			= 0x10002;
@@ -87,6 +89,7 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
 
 		RequestHandler.getInstance().addRequestEventListener(this);
 		ScreenPictureHandler.getInstance().addScreenPictureListener(this);
+		SocketIOManager.getInstance().addSocketDisconnectListener(this);
 		sendScreenSize();
 	}
 
@@ -139,8 +142,9 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
 	}
 	
 	private void keyEvent(int keyCode, int keyValue) {
-		ServerCommunication.getInstance()
-		.sendKeyButtonEvent(getMainLooper().getThread(), keyCode, keyValue);
+
+		KeyEventData keyEventData = new KeyEventData(keyCode, keyValue);
+		SocketIOManager.getInstance().sendDataToClient(keyEventData, null);
 	}
 
 	private void touchPanelViewTouchEventHandler(MotionEvent e) {
@@ -214,6 +218,11 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
 		message.arg1 = SCREEN_PICTURE;
 		message.obj = screenPictureData.encode();
 		messageHandler.sendMessage(message);
+	}
+
+	@Override
+	public void socketDisconnectEvent(Socket socket) {
+		finish();
 	}
 
 	private class MessageHandler extends Handler {

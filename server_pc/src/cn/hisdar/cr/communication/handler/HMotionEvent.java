@@ -40,9 +40,17 @@ public class HMotionEvent {
     }
 
     public float getX(int i) {
+    	if (i >= points.size()) {
+    		return 0;
+    	}
+    	
         return points.get(i).x;
     }
     public float getY(int i) {
+    	if (i >= points.size()) {
+    		return 0;
+    	}
+    	
         return points.get(i).y;
     }
 

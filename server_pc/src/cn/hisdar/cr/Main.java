@@ -4,10 +4,8 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import cn.hisdar.cr.communication.handler.MotionEventHandler;
-import cn.hisdar.cr.communication.handler.ScreenPictureHandler;
 import cn.hisdar.cr.controler.KeyControler;
 import cn.hisdar.cr.controler.MouseControler;
-import cn.hisdar.cr.event.EventDispatcher;
 import cn.hisdar.cr.screen.ScreenHunterServer;
 import cn.hisdar.cr.systemtray.ComputerRemoteSystemTray;
 import cn.hisdar.lib.commandline.CommandLineAdapter;
@@ -53,13 +51,8 @@ public class Main {
 		ComputerRemoteSystemTray.getInstance();
 		
 		// init controls
-		EventDispatcher eventDispatcher = EventDispatcher.getInstance();
-
 		MouseControler mouseControler = new MouseControler();
-		eventDispatcher.addHMotionEventListener(mouseControler);
-		
 		KeyControler keyControler = new KeyControler();
-		eventDispatcher.addHKeyEventListener(keyControler);
 		
 		// init ui
 		ComputerRemoteFrame computerRemoteFrame = new ComputerRemoteFrame();

@@ -13,6 +13,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import cn.hisdar.computerremote.common.Global;
+import cn.hisdar.cr.communication.socket.SocketDisconnectListener;
+import cn.hisdar.cr.communication.socket.SocketIOManager;
 import cn.hisdar.lib.commandline.CommandLineAdapter;
 import cn.hisdar.lib.configuration.ConfigItem;
 import cn.hisdar.lib.configuration.HConfig;
@@ -22,7 +24,7 @@ import cn.hisdar.lib.ui.HLinearPanel;
 import cn.hisdar.lib.ui.TitlePanel;
 import cn.hisdar.lib.ui.output.HKeyValuePanel;
 
-public class ConnectView extends JPanel implements SocketAccepterListener {
+public class ConnectView extends JPanel implements SocketAccepterListener, SocketDisconnectListener {
 
 	/**
 	 * 
@@ -39,12 +41,12 @@ public class ConnectView extends JPanel implements SocketAccepterListener {
 	private HKeyValuePanel autoStartPanel = null;
 	
 	private HLinearPanel clientInforPanel = null;
-	private ArrayList<ClientInforPanel> clientInforPanels = null;
+	private ArrayList<ClientInforPanel> clientInforItems = null;
 	
 	public ConnectView() {
 		setLayout(new BorderLayout());
 		
-		clientInforPanels = new ArrayList<>();
+		clientInforItems = new ArrayList<>();
 		clientInforPanel = new HLinearPanel();
 		
 		serverInfoTitlePanel = new TitlePanel("服务器信息");
@@ -68,11 +70,8 @@ public class ConnectView extends JPanel implements SocketAccepterListener {
 		
 		add(mainPanel, BorderLayout.CENTER);
 		
-		/*CRServer cmdServer = CRServerManager.getInstance().getCmdServer();
-		cmdServer.addClientEventListener(this);
-		cmdServer.addServerEventListener(this);*/
-		//CRCSManager.getInstance().addServerEventListener(this);
 		SocketAccepter.getInstance().addSocketAccepterListener(this);
+		SocketIOManager.getInstance().addSocketDisconnectListener(this);
 	}
 	
 	private JPanel getServerInforPanel() {
@@ -133,7 +132,7 @@ public class ConnectView extends JPanel implements SocketAccepterListener {
 		HLog.il("Create information panel");
 		
 		currentClientPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-		clientInforPanels.add(currentClientPanel);
+		clientInforItems.add(currentClientPanel);
 		clientInforPanel.add(currentClientPanel);
 		clientInforPanel.revalidate();
 		//clientInforPanel.repaint();
@@ -166,5 +165,24 @@ public class ConnectView extends JPanel implements SocketAccepterListener {
 			HLog.el("get local host information fail");
 			HLog.el(e);
 		}
+	}
+
+	@Override
+	public void socketDisconnectEvent(Socket socket) {
+		
+		HLog.dl("socket disconnect event");
+		ClientInforPanel clientInfoItem = null;
+		for (ClientInforPanel ciPanel : clientInforItems) {
+			if (ciPanel.getSocket() == socket) {
+				clientInfoItem = ciPanel;
+			}
+		}
+		
+		if (clientInfoItem == null) {
+			HLog.dl("socket not found");
+			return;
+		}
+
+		clientInforPanel.removeChild(clientInfoItem);
 	}
 }

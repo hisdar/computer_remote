@@ -16,10 +16,12 @@ public class SocketIOManager implements SocketIOEventListener {
 	private static SocketIOManager socketIOManager = null;
 	private ArrayList<SocketIO> socketIOs = null;
 	private ArrayList<AbstractHandler> dataHandlers = null;
+	private ArrayList<SocketDisconnectListener> socketDisconnectListeners = null;
 	
 	private SocketIOManager() {
 		socketIOs = new ArrayList<>();
 		dataHandlers = new ArrayList<>();
+		socketDisconnectListeners = new ArrayList<>();
 	}
 	
 	public static SocketIOManager getInstance() {
@@ -114,7 +116,7 @@ public class SocketIOManager implements SocketIOEventListener {
 		if (socket != null) {
 			for (int i = 0; i < socketIOs.size(); i++) {
 				if (socketIOs.get(i).getSocket() == socket) {
-					return socketIOs.get(i).sendData(data);
+					return socketIOs.get(i).sendDataMutual(data);
 				}
 			}
 			
@@ -124,7 +126,7 @@ public class SocketIOManager implements SocketIOEventListener {
 			int sendCount = 0;
 			for (int i = 0; i < socketIOs.size(); i++) {
 				if (socketIOs.get(i).getSocket() != null) {
-					socketIOs.get(i).sendData(data);
+					socketIOs.get(i).sendDataMutual(data);
 					sendCount += 1;
 				}
 			}
@@ -137,7 +139,7 @@ public class SocketIOManager implements SocketIOEventListener {
 
 	@Override
 	public void socketDisconnectEvent(Socket socket) {
-
+		
 		SocketIO socketIO = null;
 		for (int i = 0; i < socketIOs.size(); i++) {
 			if (socketIOs.get(i).getSocket() == socket) {
@@ -150,5 +152,23 @@ public class SocketIOManager implements SocketIOEventListener {
 			socketIO.removeSocketIOEventListener(this);
 			socketIOs.remove(socketIO);
 		}
+		
+		for (SocketDisconnectListener itr : socketDisconnectListeners) {
+			itr.socketDisconnectEvent(socket);
+		}
+	}
+	
+	public void addSocketDisconnectListener(SocketDisconnectListener l) {
+		for (SocketDisconnectListener itr : socketDisconnectListeners) {
+			if (itr == l) {
+				return;
+			}
+		}
+		
+		socketDisconnectListeners.add(l);
+	}
+	
+	public void removeSocketDisconnectListener(SocketDisconnectListener l) {
+		socketDisconnectListeners.remove(l);
 	}
 }

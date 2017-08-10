@@ -8,6 +8,7 @@ public abstract class AbstractData {
 	public static final int DATA_TYPE_REQUEST        = 0x10005;
     public static final int DATA_TYPE_SERVER_INFO    = 0x10006;
 	public static final int DATA_TYPE_MOUSE_BUTTON   = 0x10007;
+	public static final int DATA_TYPE_KEY_EVENT      = 0x10008;
 
     abstract public int getDataType();
 
@@ -65,5 +66,23 @@ public abstract class AbstractData {
 		}
 
 		return number;
+	}
+	
+	public static String arrayToString(byte[] array) {
+		String str = new String();
+		
+		for (int i = 0; i < array.length; i++) {
+			str += String.format("0x%02x", array[i]);
+			if (i < array.length - 1) {
+				str += " ";
+			}
+			
+			if (i % 8 == 0 && i != 0) {
+				str += "\n";
+			}
+		}
+		
+		return str;
+		
 	}
 }

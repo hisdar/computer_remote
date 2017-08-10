@@ -13,27 +13,42 @@ public class SocketIO {
 	private Socket socket;
 	private ArrayList<SocketIOEventListener> socketIOEventListeners = null;
 	private SocketReader socketReader = null;
+	private SocketWriter socketWriter = null;
 	
 	public SocketIO(Socket socket) {
 		this.socket = socket;
 		socketIOEventListeners = new ArrayList<>();
+
 		socketReader = new SocketReader();
-		socketReader.startServerReader();
+		socketReader.startReader();
+		
+		socketWriter = new SocketWriter();
+		socketWriter.startWriter();
 	}
 	
 	public void startSocketIO() {
 		
 		if (socketReader != null) {
-			socketReader.stopServerReader();
+			socketReader.stopReader();
 		}
 		
 		socketReader = new SocketReader();
-		socketReader.startServerReader();
+		socketReader.startReader();
+		
+		if (socketWriter != null) {
+			socketWriter.stopWriter();
+		}
+		
+		socketWriter = new SocketWriter();
+		socketWriter.startWriter();
 	}
 	
 	public void stopSocketIO() {
-		socketReader.stopServerReader();
+		socketReader.stopReader();
 		socketReader = null;
+		
+		socketWriter.stopWriter();
+		socketWriter = null;
 	}
 
 	public Socket getSocket() {
@@ -67,12 +82,12 @@ public class SocketIO {
 	private class SocketReader extends Thread {
 		private boolean isStop = false;
 
-		public void startServerReader() {
+		public void startReader() {
 		    isStop = false;
 		    start();
 		}
 		
-		public void stopServerReader() {
+		public void stopReader() {
 		    isStop = true;
 		    
 		    for (int i = 0; i < socketIOEventListeners.size(); i++) {
@@ -86,22 +101,28 @@ public class SocketIO {
 		private byte[] readData(InputStream inputStream, int dataLen) {
 		
 		    int offset = 0;
-		    byte[] data = new byte[dataLen];
+		    byte[] data = null;
+		    
+		    try {
+		    	data = new byte[dataLen];
+		    } catch (NegativeArraySizeException e) {
+		    	e.printStackTrace();
+		    	return null;
+		    }
+		    
 		    int readLen = 0;
 		    while (dataLen > 0 && !isStop) {
 		    	try {
 		    		readLen = inputStream.read(data, offset, dataLen);
 		    		if (readLen < 0) {
-		    			if (isSocketClosed(socket)) {
-		    				stopServerReader();
-		    				return null;
-		    			}
+						stopReader();
 		    			readLen = 0;
+						return null;
 		    		}
 		    	} catch (IOException e) {
 		    		e.printStackTrace();
 
-		    		stopServerReader();
+		    		stopReader();
 		    		break;
 		    	}
 
@@ -151,6 +172,14 @@ public class SocketIO {
 		}
 	}
 	
+	/** 
+	 * This method is considered unsafe, if multi thread call this method, 
+	 * the data maybe chaos, 
+	 * #sendDataMutual was be advised to use
+	 * 
+	 * @param data
+	 * @return
+	 */
     public boolean sendData(AbstractData data) {
 
         if (socket == null) {
@@ -161,11 +190,18 @@ public class SocketIO {
             OutputStream out = socket.getOutputStream();
 
             // write send time 8 bytes
-            out.write(AbstractData.longToBytes(System.currentTimeMillis()));
+			long currentTime = System.currentTimeMillis();
+			byte[] timeBytes = AbstractData.longToBytes(currentTime);
+			//Log.i(CRAActivity.TAG, "[Hisdar]data time=" + currentTime + ", bytes data:" + AbstractData.arrayToString(timeBytes));
+
+			out.write(timeBytes);
             out.flush();
-            
-            // write data type 4 bytes
-            out.write(AbstractData.intToBytes(data.getDataType()));
+
+			// write data type 4 bytes
+			byte[] dataTypeBytes = AbstractData.intToBytes(data.getDataType());
+			//Log.i(CRAActivity.TAG, "[Hisdar]data type=" + data.getDataType() + ", bytes data:" + AbstractData.arrayToString(dataTypeBytes));
+
+            out.write(dataTypeBytes);
             out.flush();
 
             byte[] bytesData = data.encode();
@@ -175,7 +211,7 @@ public class SocketIO {
             out.write(dataLength);
             out.flush();
 
-            // 2.write data to client
+			// 2.write data to client
             out.write(bytesData);
             out.flush();
         } catch (IOException e) {
@@ -186,12 +222,55 @@ public class SocketIO {
         return true;
     }
     
-	public boolean isSocketClosed(Socket socket) {
-		try {
-			socket.sendUrgentData(0xFF);
-			return false;
-		} catch (Exception se) {
+	public boolean sendDataMutual(AbstractData data) {
+		
+		socketWriter.sendDataMutual(data);
+		socketWriter.interrupt();
+		
+		return true;
+	}
+	
+	private class SocketWriter extends Thread {
+		
+		private boolean isStop = false;
+		private ArrayList<AbstractData> socketDatas = null;
+
+		public SocketWriter() {
+			socketDatas = new ArrayList<>();
+		}
+		
+		public void stopWriter() {
+			isStop = true;
+		}
+
+		public void startWriter() {
+		    isStop = false;
+		    start();
+		}
+		
+		public boolean sendDataMutual(AbstractData data) {
+			socketDatas.add(data);
+			
 			return true;
+		}
+		
+		public void run() {
+			
+			while (!isStop) {
+			
+				if (socketDatas.size() <= 0) {
+				
+					try {
+						sleep(5000);
+					} catch (InterruptedException e) {}
+					
+					continue;
+				}
+				
+				AbstractData currentData = socketDatas.get(0);
+				socketDatas.remove(0);
+				sendData(currentData);
+			}
 		}
 	}
 }

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 import cn.hisdar.cr.communication.data.AbstractData;
 import cn.hisdar.cr.communication.data.MouseButtonData;
+import cn.hisdar.cr.communication.socket.SocketIOManager;
 
 /**
  * Created by Hisdar on 2017/8/4.
@@ -18,6 +19,7 @@ public class MouseButtonEventHandler extends AbstractHandler {
 
     private MouseButtonEventHandler() {
         mouseButtonEventListeners = new ArrayList<>();
+        SocketIOManager.getInstance().addDataHandler(this);
     }
 
     public static MouseButtonEventHandler getInstance() {

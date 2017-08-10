@@ -46,7 +46,7 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
 public class CRAActivity extends AppCompatActivity
         implements View.OnClickListener, ServerSearcheerEventListener, ServerInfoListener {
 
-    public static final String TAG = "Hisdar-CR";
+    public static final String TAG = "CR-CRAActivity";
     public static final int MOUSE_CONTROL_ACTIVITY_CODE = 5299;
     public static final int KEYBOARD_CONTROL_ACTIVITY_CODE = 5300;
     private static final CharSequence MESSAGE_SEARCHING_SERVER = "正在搜索服务器......";
@@ -120,7 +120,7 @@ public class CRAActivity extends AppCompatActivity
 
                 clearServerList();
 
-                Log.i(CRAActivity.TAG, "start search server");
+                Log.i(TAG, "start search server");
                 serverSearcher = new ServerSearcher();
                 serverSearcher.addServerSearcherListener(this);
                 serverSearcher.startSearch(getBaseContext());
@@ -157,7 +157,7 @@ public class CRAActivity extends AppCompatActivity
         }
 
         if (serverInfoData == null) {
-            Log.e(CRAActivity.TAG, "server info data not found, id=" + arg0.getId());
+            Log.e(TAG, "server info data not found, id=" + arg0.getId());
             return;
         }
 

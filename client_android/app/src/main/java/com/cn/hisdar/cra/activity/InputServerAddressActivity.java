@@ -18,10 +18,13 @@ import android.widget.EditText;
 import com.cn.hisdar.cra.R;
 import com.cn.hisdar.cra.lib.configuration.ConfigItem;
 import com.cn.hisdar.cra.lib.configuration.HConfig;
+
 import cn.hisdar.cr.communication.ServerCommunication;
 
 @SuppressLint("NewApi") public class InputServerAddressActivity extends Activity
 implements OnClickListener {
+
+	private static final String TAG = "CR-InputServerAddressActivity";
 
 	private EditText ipaddressEditText;
 	private EditText portEditText;
@@ -59,11 +62,11 @@ implements OnClickListener {
 	
 	private void connectToServerButtonActionHandler(Context context, String ipAddress, String portString) {
 
-		Log.i(CRAActivity.TAG, "Input ip address is:" + ipAddress);
-		Log.i(CRAActivity.TAG, "Input ip port is:" + portString);
+		Log.i(TAG, "Input ip address is:" + ipAddress);
+		Log.i(TAG, "Input ip port is:" + portString);
 		
 		if (!isIpAddress(ipAddress)) {
-			Log.e(CRAActivity.TAG, "Input ip address is not a ip address");
+			Log.e(TAG, "Input ip address is not a ip address");
 			return;
 		}
 		
@@ -71,7 +74,7 @@ implements OnClickListener {
 		try {
 			port = Integer.parseInt(portString.trim());
 		} catch (NumberFormatException e) {
-			Log.e(CRAActivity.TAG, "port is not visiable");
+			Log.e(TAG, "port is not visiable");
 			return;
 		}
 		
@@ -89,7 +92,7 @@ implements OnClickListener {
 		
 		sendScreenSizeToServer();
 		
-		Log.i(CRAActivity.TAG, "jump to mouse control activity");
+		Log.i(TAG, "jump to mouse control activity");
 		// jump to control activity
         Intent intent = new Intent(context, MouseControlActivity.class);
         //����Intent��ͨ��ֵ�ķ�ʽ  
