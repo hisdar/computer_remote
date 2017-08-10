@@ -7,7 +7,6 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.util.Log;
 
-import com.cn.hisdar.cra.activity.CRAActivity;
 import com.cn.hisdar.cra.common.Global;
 
 import org.w3c.dom.Document;
@@ -32,7 +31,9 @@ import cn.hisdar.cr.communication.data.ServerInfoData;
 import cn.hisdar.cr.communication.socket.SocketIOManager;
 
 public class ServerSearcher {
-	
+
+	private static final String TAG = "CR-ServerSearcher";
+
 	private ArrayList<ServerSearcheerEventListener> listeners;
 	private int gSserverThreadCount = 0;
 	private boolean isStopSearch = false;
@@ -53,7 +54,7 @@ public class ServerSearcher {
 		
 		if (!isWifiConnected(context)) {
 			notifyServerSearchMessage(new ServerSearcherState(ServerSearcherState.MESSAGE_WIFI_NOT_CONNECTED));
-			Log.e(CRAActivity.TAG, "wifi is not connected");
+			Log.e(TAG, "wifi is not connected");
 			return;
 		}
 		
@@ -234,7 +235,7 @@ public class ServerSearcher {
                 try {
                     Socket socket = new Socket(ipAddress, DEFAULT_PORT);
 
-					Log.i(CRAActivity.TAG, "found server:" + ipAddress);
+					Log.i(TAG, "found server:" + ipAddress);
                     // if connect success, add socket to socket io manager
                     SocketIOManager.getInstance().addSocket(socket);
                     notifyServerSearchEvent(socket);
@@ -259,7 +260,7 @@ public class ServerSearcher {
 				socket = new Socket(ipAddress, DEFAULT_PORT);
 				//serverInformation = getServerInformation(socket);
 				//serverInformation.setId(id);
-				Log.i(CRAActivity.TAG, "create socket success");
+				Log.i(TAG, "create socket success");
 
 				socket.close();
 			} catch (IOException e1 ) {
@@ -336,7 +337,7 @@ public class ServerSearcher {
 				}
 				
 			} catch (IOException e) {
-				Log.i(CRAActivity.TAG, e.getMessage());
+				Log.i(TAG, e.getMessage());
 			}
 			
 			return serverStringBuffer;
@@ -372,7 +373,7 @@ public class ServerSearcher {
 		}
 
 		if (gSserverThreadCount == 0) {
-			Log.i(CRAActivity.TAG, "Search finished!!!");
+			Log.i(TAG, "Search finished!!!");
 			for (int i = 0; i < listeners.size(); i++) {
 				ServerSearcherState message = new ServerSearcherState(ServerSearcherState.SEARCH_FINISHED);
 				listeners.get(i).serverSercherStateEvent(message);

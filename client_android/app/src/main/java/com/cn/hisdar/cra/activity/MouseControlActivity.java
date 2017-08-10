@@ -7,7 +7,6 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -15,7 +14,6 @@ import android.view.View.OnTouchListener;
 import android.widget.Button;
 import android.widget.ImageView;
 
-import com.cn.hisdar.cra.EventDispatcher;
 import com.cn.hisdar.cra.HResponseData;
 import com.cn.hisdar.cra.HResponseDataListener;
 import com.cn.hisdar.cra.HServerEvent;
@@ -27,7 +25,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
-import cn.hisdar.cr.communication.CRClient;
 import cn.hisdar.cr.communication.data.AbstractData;
 import cn.hisdar.cr.communication.data.KeyEventData;
 import cn.hisdar.cr.communication.data.MotionEventData;
@@ -49,10 +46,13 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
  * 
  * @see
  */
-@SuppressLint("ClickableViewAccessibility") public class MouseControlActivity extends Activity
+@SuppressLint("ClickableViewAccessibility")
+public class MouseControlActivity extends Activity
 	implements OnTouchListener, HResponseDataListener, HServerEventListener,
 		RequestEventListener, ScreenPictureListener, SocketDisconnectListener {
-	
+
+	private static final String TAG = "CR-MouseControlActivity";
+
 	private static final int SHOW_RESPONSE_MESSAGE 	= 0x10001;
 	private static final int SERVER_EVENT 			= 0x10002;
 	private static final int SCREEN_PICTURE			= 0x10003;
@@ -81,11 +81,6 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
 		rightButton.setOnTouchListener(this);
 		
 		messageHandler = new MessageHandler();
-		EventDispatcher eventDispatcher = EventDispatcher.getInstance();
-		eventDispatcher.addHResponseDataListener(this);
-		eventDispatcher.addHServerEventListener(this);
-
-        CRClient dataServer = CRClient.getInstance();
 
 		RequestHandler.getInstance().addRequestEventListener(this);
 		ScreenPictureHandler.getInstance().addScreenPictureListener(this);
@@ -169,7 +164,7 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
 			hMotionEvent.setY(i, e.getY(i));
 		}
 
-		Log.i(CRAActivity.TAG, "send motion event data");
+		//Log.i(TAG, "send motion event data");
 		MotionEventData motionEventData = new MotionEventData();
 		motionEventData.setMotionEvent(hMotionEvent);
 		SocketIOManager.getInstance().sendDataToClient(motionEventData, null);
@@ -197,7 +192,7 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
 
 		//ScreenSizeHandler screenSizeData = new ScreenSizeHandler(width, height);
 		//return CRClient.getInstance().sendData(screenSizeData);
-		Log.d(CRAActivity.TAG, "send screen size data:" + width + ", " + height);
+		//Log.d(TAG, "send screen size data:" + width + ", " + height);
 		ScreenSizeData screenSizeData = new ScreenSizeData(width, height);
 		SocketIOManager.getInstance().sendDataToClient(screenSizeData, null);
 
@@ -213,7 +208,7 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
 
 	@Override
 	public void screenPictureEvent(ScreenPictureData screenPictureData) {
-		Log.d(CRAActivity.TAG, "screenPictureEvent");
+		//Log.d(TAG, "screenPictureEvent");
 		Message message = new Message();
 		message.arg1 = SCREEN_PICTURE;
 		message.obj = screenPictureData.encode();

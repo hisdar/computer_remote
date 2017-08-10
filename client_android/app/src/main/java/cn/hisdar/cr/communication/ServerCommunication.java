@@ -7,8 +7,6 @@ import android.util.Log;
 import android.view.MotionEvent;
 
 import com.cn.hisdar.cra.MotionEventTool;
-import com.cn.hisdar.cra.activity.CRAActivity;
-import com.cn.hisdar.cra.server.CmdServerReader;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -18,6 +16,8 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
 
 @SuppressLint("HandlerLeak")
 public class ServerCommunication extends Thread {
+
+	private static final String TAG = "CR-ServerCommunication";
 
 	private static final int CONNECT_TO_SERVER = 1;
 	private static final int SEND_EVENT_DATA = 2;
@@ -35,10 +35,7 @@ public class ServerCommunication extends Thread {
 
 	private Socket dataSocket = null;
 	private String currentIpAddress = null;
-	
-	private CmdServerReader cmdServerReader = null;
-	private CRClient dataServer = null;
-	
+
 	private ServerCommunication() {		
 		start();
 	}
@@ -85,10 +82,10 @@ public class ServerCommunication extends Thread {
 
 	public boolean connectToCmdServer(Thread owner, String ipAddress, int cmd_server_port, int data_server_port) {
 
-		Log.i(CRAActivity.TAG, "connect to cmd server");
+		Log.i(TAG, "connect to cmd server");
 
 		if (SocketIOManager.getInstance().getSocketByIP(ipAddress) != null) {
-			Log.i(CRAActivity.TAG, ipAddress + " already connected");
+			Log.i(TAG, ipAddress + " already connected");
 			return true;
 		}
 
@@ -105,7 +102,7 @@ public class ServerCommunication extends Thread {
 	
 	public boolean disconnect(Thread owner, String ipAddress, int port) {
 		
-		Log.i(CRAActivity.TAG, "connect to server");
+		Log.i(TAG, "connect to server");
 		Message connectToServerMessage = new Message();
 		Bundle data = new Bundle();
 		data.putString(IP_ADDRESS, ipAddress);
@@ -197,7 +194,7 @@ public class ServerCommunication extends Thread {
 	 * @return if connect success, return true, otherwise return false
 	 */
 	private boolean connectToServerEventHandler(Message messsage) {
-		Log.i(CRAActivity.TAG, "connectToServerEventHandler");
+		Log.i(TAG, "connectToServerEventHandler");
 		String ipAddress = messageToHandle.getData().getString(IP_ADDRESS);
 		//int cmdPort = messageToHandle.getData().getInt(CMD_SERVER_PORT);
 		int dataPort = messageToHandle.getData().getInt(CMD_SERVER_PORT);
@@ -206,33 +203,33 @@ public class ServerCommunication extends Thread {
 		if (dataSocket != null && dataSocket.isConnected()) {
 			
 			if (currentIpAddress.equals(ipAddress)) {
-				Log.e(CRAActivity.TAG, "connection already on");
+				Log.e(TAG, "connection already on");
 				return true;
 			} else {
 				try {
 					dataSocket.close();
 				} catch (IOException e) {
-					Log.e(CRAActivity.TAG, "close connection fail:" + e.getMessage());
+					Log.e(TAG, "close connection fail:" + e.getMessage());
 				}
 
 				dataSocket = null;
 			}
 		}
-		Log.i(CRAActivity.TAG, "connectToServerEventHandler: create socket");
+		Log.i(TAG, "connectToServerEventHandler: create socket");
 		// if not connect, connect to server
 		try {
 
 			dataSocket = new Socket(ipAddress, dataPort);
 			currentIpAddress = dataSocket.getInetAddress().getHostAddress();
-			Log.e(CRAActivity.TAG, "connect to server success:");
+			Log.e(TAG, "connect to server success:");
 
 			SocketIOManager.getInstance().addSocket(dataSocket);
 			
 		} catch (UnknownHostException e) {
-			Log.e(CRAActivity.TAG, "connect to server fail:" + e.getMessage().toString());
+			Log.e(TAG, "connect to server fail:" + e.getMessage().toString());
 			return false;
 		} catch (IOException e) {
-			Log.e(CRAActivity.TAG, "connect to server fail:" + e.getMessage().toString());
+			Log.e(TAG, "connect to server fail:" + e.getMessage().toString());
 			return false;
 		}
 		
@@ -248,10 +245,9 @@ public class ServerCommunication extends Thread {
 			
 			if (currentIpAddress.equals(ipAddress)) {
 				try {
-					cmdServerReader.stopServerReader();
 					dataSocket.close();
 				} catch (IOException e) {
-					Log.e(CRAActivity.TAG, "close connection fail:" + e.getMessage());
+					Log.e(TAG, "close connection fail:" + e.getMessage());
 				}
 
 				dataSocket = null;

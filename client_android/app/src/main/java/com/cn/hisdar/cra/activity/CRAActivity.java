@@ -46,7 +46,7 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
 public class CRAActivity extends AppCompatActivity
         implements View.OnClickListener, ServerSearcheerEventListener, ServerInfoListener {
 
-    public static final String TAG = "CR-CRAActivity";
+    private static final String TAG = "CR-CRAActivity";
     public static final int MOUSE_CONTROL_ACTIVITY_CODE = 5299;
     public static final int KEYBOARD_CONTROL_ACTIVITY_CODE = 5300;
     private static final CharSequence MESSAGE_SEARCHING_SERVER = "正在搜索服务器......";
