@@ -152,17 +152,14 @@ public class SocketIO {
 	            // read send time 8 bytes
 	            byte[] dataTimeByte = readData(inputStream, 8);
 	            long dataTime = AbstractData.bytesToLong(dataTimeByte);
-	            //System.out.println("dataTime=" + dataTime + ", bytes data:" + AbstractData.arrayToString(dataTimeByte));
 
 	            // read data type 4 bytes
 	            byte[] dataTypeByte = readData(inputStream, 4);
 	            int dataType = AbstractData.bytesToInt(dataTypeByte);
-	            //System.out.println("dataType=" + dataType + ", bytes data:" + AbstractData.arrayToString(dataTypeByte));
 
 	            // read data length 4 bytes
 	            byte[] dataLenByte = readData(inputStream, 4);
 	            int dataLen = AbstractData.bytesToInt(dataLenByte);
-	            //System.out.println("dataLen=" + dataLen + ", bytes data:" + AbstractData.arrayToString(dataLenByte));
 
 	            // read data
 	            byte[] dataBuf = readData(inputStream, dataLen);
@@ -186,7 +183,7 @@ public class SocketIO {
 	 */
     public boolean sendData(AbstractData data) {
 
-        if (socket == null) {
+        if (socket == null || data == null) {
             return false;
         }
 
@@ -215,7 +212,7 @@ public class SocketIO {
             out.write(dataLength);
             out.flush();
 
-            // 2.write data to client
+			// 2.write data to client
             out.write(bytesData);
             out.flush();
         } catch (IOException e) {

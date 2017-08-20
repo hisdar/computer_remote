@@ -16,6 +16,10 @@ import cn.hisdar.lib.ui.UIAdapter;
 
 public class ComputerRemoteFrame extends JFrame implements TrayIconEventListener {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6000210182952352472L;
 	private static final String COMPUTER_REMOTE_TITLE = "Computer Remote - V1.0";
 	private static final int COMPUTER_REMOTE_WIDTH = 850;
 	private static final int COMPUTER_REMOTE_HEIGHT = 500;
@@ -95,7 +99,6 @@ public class ComputerRemoteFrame extends JFrame implements TrayIconEventListener
 
 		@Override
 		public void windowClosing(WindowEvent e) {
-			// TODO Auto-generated method stub
 			super.windowClosing(e);
 		}
 

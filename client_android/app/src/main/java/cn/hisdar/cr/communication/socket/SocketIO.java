@@ -183,7 +183,7 @@ public class SocketIO {
 	 */
     public boolean sendData(AbstractData data) {
 
-        if (socket == null) {
+        if (socket == null || data == null) {
             return false;
         }
 

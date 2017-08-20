@@ -14,6 +14,7 @@ import cn.hisdar.cr.communication.handler.AbstractHandler;
  */
 public class SocketIOManager implements SocketIOEventListener {
 
+	private static final String TAG = "SocketIOManager";
 	private static SocketIOManager socketIOManager = null;
 	private ArrayList<SocketIO> socketIOs = null;
 	private ArrayList<AbstractHandler> dataHandlers = null;
@@ -98,7 +99,7 @@ public class SocketIOManager implements SocketIOEventListener {
 		
 		// non-response data, we send a response data
 		if (data.getDataType() != AbstractData.DATA_TYPE_RESPONSE) {
-			ResponseData responseData = new ResponseData(data.getWriteTime(), data.getDataLength());
+			ResponseData responseData = new ResponseData(data.getWriteTime(), data.getDataLength(), data.getDataType());
 			sendDataToClient(responseData, socket);
 		}
 		

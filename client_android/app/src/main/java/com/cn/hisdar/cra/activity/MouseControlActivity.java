@@ -12,10 +12,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.Button;
-import android.widget.ImageView;
 
-import com.cn.hisdar.cra.HResponseData;
-import com.cn.hisdar.cra.HResponseDataListener;
 import com.cn.hisdar.cra.HServerEvent;
 import com.cn.hisdar.cra.HServerEventListener;
 import com.cn.hisdar.cra.R;
@@ -30,11 +27,14 @@ import cn.hisdar.cr.communication.data.KeyEventData;
 import cn.hisdar.cr.communication.data.MotionEventData;
 import cn.hisdar.cr.communication.data.MouseButtonData;
 import cn.hisdar.cr.communication.data.RequestData;
+import cn.hisdar.cr.communication.data.ResponseData;
 import cn.hisdar.cr.communication.data.ScreenPictureData;
 import cn.hisdar.cr.communication.data.ScreenSizeData;
 import cn.hisdar.cr.communication.handler.HMotionEvent;
 import cn.hisdar.cr.communication.handler.RequestEventListener;
 import cn.hisdar.cr.communication.handler.RequestHandler;
+import cn.hisdar.cr.communication.handler.ResponseHandler;
+import cn.hisdar.cr.communication.handler.ResponseListener;
 import cn.hisdar.cr.communication.handler.ScreenPictureHandler;
 import cn.hisdar.cr.communication.handler.ScreenPictureListener;
 import cn.hisdar.cr.communication.socket.SocketDisconnectListener;
@@ -48,8 +48,9 @@ import cn.hisdar.cr.communication.socket.SocketIOManager;
  */
 @SuppressLint("ClickableViewAccessibility")
 public class MouseControlActivity extends Activity
-	implements OnTouchListener, HResponseDataListener, HServerEventListener,
-		RequestEventListener, ScreenPictureListener, SocketDisconnectListener {
+	implements OnTouchListener, HServerEventListener,
+		RequestEventListener, ScreenPictureListener, SocketDisconnectListener,
+		ResponseListener {
 
 	private static final String TAG = "CR-MouseControlActivity";
 
@@ -58,7 +59,7 @@ public class MouseControlActivity extends Activity
 	private static final int SCREEN_PICTURE			= 0x10003;
 
 	//private TextView touchPanelView = null;
-	private ImageView touchPanelView = null;
+	private MessagedImageView touchPanelView = null;
 	
 	private Button leftButton;
 	private Button rightButton;
@@ -71,7 +72,7 @@ public class MouseControlActivity extends Activity
 		
 		setContentView(R.layout.activity_mouse_control);
 		//touchPanelView = (TextView)findViewById(R.id.touch_panel_text_view);
-		touchPanelView = (ImageView)findViewById(R.id.touch_panel_text_view);
+		touchPanelView = (MessagedImageView)findViewById(R.id.touch_panel_text_view);
 		touchPanelView.setOnTouchListener(this);
 
 		leftButton = (Button)findViewById(R.id.left_button);
@@ -85,6 +86,8 @@ public class MouseControlActivity extends Activity
 		RequestHandler.getInstance().addRequestEventListener(this);
 		ScreenPictureHandler.getInstance().addScreenPictureListener(this);
 		SocketIOManager.getInstance().addSocketDisconnectListener(this);
+		ResponseHandler.getInstance().addResponseListener(this);
+
 		sendScreenSize();
 	}
 
@@ -122,6 +125,67 @@ public class MouseControlActivity extends Activity
 		}
 	}
 
+
+	@Override
+	public void serverEvent(HServerEvent serverEvent) {
+		Message message = new Message();
+		message.arg1 = SERVER_EVENT;
+		message.obj = serverEvent;
+		messageHandler.sendMessage(message);
+	}
+
+	@Override
+	public void requestEvent(RequestData requestData) {
+		if (requestData.getRequestDataType() == AbstractData.DATA_TYPE_SCREEN_SIZE) {
+			sendScreenSize();
+		}
+	}
+
+	@Override
+	public void screenPictureEvent(ScreenPictureData screenPictureData) {
+		//Log.d(TAG, "screenPictureEvent");
+		Message message = new Message();
+		message.arg1 = SCREEN_PICTURE;
+		message.obj = screenPictureData.encode();
+		messageHandler.sendMessage(message);
+	}
+
+	@Override
+	public void socketDisconnectEvent(Socket socket) {
+		finish();
+	}
+
+	@Override
+	public void responseEvent(ResponseData responseData) {
+		Message message = new Message();
+		message.arg1 = SHOW_RESPONSE_MESSAGE;
+		message.obj = responseData;
+		messageHandler.sendMessage(message);
+	}
+
+	private class MessageHandler extends Handler {
+
+		@Override
+		public void handleMessage(Message msg) {
+			
+			switch (msg.arg1) {
+				case SHOW_RESPONSE_MESSAGE:
+					showResponseData((ResponseData)msg.obj);
+					break;
+				case SERVER_EVENT:
+					serverEventHandler((HServerEvent)msg.obj);
+					break;
+				case SCREEN_PICTURE:
+					screenPictureShow((byte[])msg.obj);
+					break;
+				default:
+					break;
+			}
+			
+			super.handleMessage(msg);
+		}
+	}
+
 	private void buttonTouchEvent(MotionEvent arg1, int buttonId) {
 
 		MouseButtonData mouseButtonData = new MouseButtonData();
@@ -135,7 +199,7 @@ public class MouseControlActivity extends Activity
 
 		SocketIOManager.getInstance().sendDataToClient(mouseButtonData, null);
 	}
-	
+
 	private void keyEvent(int keyCode, int keyValue) {
 
 		KeyEventData keyEventData = new KeyEventData(keyCode, keyValue);
@@ -170,20 +234,19 @@ public class MouseControlActivity extends Activity
 		SocketIOManager.getInstance().sendDataToClient(motionEventData, null);
 	}
 
-	@Override
-	public void responseDataEvent(HResponseData responseData) {
-		Message message = new Message();
-		message.arg1 = SHOW_RESPONSE_MESSAGE;
-		message.obj = responseData;
-		messageHandler.sendMessage(message);
+	private void serverEventHandler(HServerEvent serverEvent) {
+		if (serverEvent.event.equals(Global.SERVER_EVENT_EXIT)) {
+			finish();
+		}
 	}
-	
-	@Override
-	public void serverEvent(HServerEvent serverEvent) {
-		Message message = new Message();
-		message.arg1 = SERVER_EVENT;
-		message.obj = serverEvent;
-		messageHandler.sendMessage(message);
+
+	private void screenPictureShow(byte[] data) {
+		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data);
+		InputStreamReader inputStreamReader = new InputStreamReader(byteArrayInputStream);
+
+		Bitmap screenPicture = BitmapFactory.decodeByteArray(data, 0, data.length);
+        //Log.i(CRAActivity.TAG, "[MouseActivity]refresh a picture");
+		touchPanelView.setImageBitmap(screenPicture);
 	}
 
 	private boolean sendScreenSize() {
@@ -199,68 +262,15 @@ public class MouseControlActivity extends Activity
 		return true;
 	}
 
-	@Override
-	public void requestEvent(RequestData requestData) {
-		if (requestData.getRequestDataType() == AbstractData.DATA_TYPE_SCREEN_SIZE) {
-			sendScreenSize();
-		}
-	}
+	private long maxDelay = 0;
+	private void showResponseData(ResponseData responseData) {
+		long writeTime = responseData.getWriteTime();
+		long currateTime = System.currentTimeMillis();
 
-	@Override
-	public void screenPictureEvent(ScreenPictureData screenPictureData) {
-		//Log.d(TAG, "screenPictureEvent");
-		Message message = new Message();
-		message.arg1 = SCREEN_PICTURE;
-		message.obj = screenPictureData.encode();
-		messageHandler.sendMessage(message);
-	}
+		long timeDelay = currateTime - writeTime;
+		maxDelay = maxDelay < timeDelay ? timeDelay : maxDelay;
 
-	@Override
-	public void socketDisconnectEvent(Socket socket) {
-		finish();
-	}
-
-	private class MessageHandler extends Handler {
-
-		@Override
-		public void handleMessage(Message msg) {
-			
-			switch (msg.arg1) {
-				case SHOW_RESPONSE_MESSAGE:
-					showResponseData((HResponseData)msg.obj);
-					break;
-				case SERVER_EVENT:
-					serverEventHandler((HServerEvent)msg.obj);
-					break;
-				case SCREEN_PICTURE:
-					screenPictureShow((byte[])msg.obj);
-					break;
-				default:
-					break;
-			}
-			
-			super.handleMessage(msg);
-		}
-
-	}
-
-	private void showResponseData(HResponseData responseData) {
-		long delayTime = responseData.readTime - responseData.sendTime;
-		String responseDataString = "延时：" + delayTime + "ms";
-	}
-	
-	private void serverEventHandler(HServerEvent serverEvent) {
-		if (serverEvent.event.equals(Global.SERVER_EVENT_EXIT)) {
-			finish();
-		}
-	}
-
-	private void screenPictureShow(byte[] data) {
-		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data);
-		InputStreamReader inputStreamReader = new InputStreamReader(byteArrayInputStream);
-
-		Bitmap screenPicture = BitmapFactory.decodeByteArray(data, 0, data.length);
-        //Log.i(CRAActivity.TAG, "[MouseActivity]refresh a picture");
-		touchPanelView.setImageBitmap(screenPicture);
+		String message = "delay-time:" + timeDelay + "; max-delay:" + maxDelay + "; data-type:" + responseData.getResponseDataType();
+		touchPanelView.setMessage(message);
 	}
 }

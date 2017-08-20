@@ -12,7 +12,9 @@ import cn.hisdar.cr.communication.handler.MotionEventHandler;
 import cn.hisdar.cr.communication.handler.MotionEventListener;
 import cn.hisdar.cr.communication.handler.MouseButtonEventHandler;
 import cn.hisdar.cr.communication.handler.MouseButtonEventListener;
+import cn.hisdar.cr.debug.DelayDebuger;
 import cn.hisdar.lib.log.HLog;
+import cn.hisdar.lib.ui.output.LogAreaDocumentListener;
 
 public class MouseControler implements MouseButtonEventListener, MotionEventListener {
 
@@ -60,7 +62,7 @@ public class MouseControler implements MouseButtonEventListener, MotionEventList
 			float x = event.getX(0) - lastEvent.getX(0);
 			float y = event.getY(0) - lastEvent.getY(0);
 			
-			if (x > 200 || y > 200) {
+			if (x > 300 || y > 300) {
 				HLog.dl("x=" + x + ", y=" + y);
 				HLog.dl("last:" + lastEvent.toString());
 				break;
@@ -116,6 +118,7 @@ public class MouseControler implements MouseButtonEventListener, MotionEventList
 	}
 	
 	public void mouseMove(int x, int y) {
+		//DelayDebuger debuger = new DelayDebuger();
 		
 		if (reRobot == null) {
 			try {
@@ -133,6 +136,8 @@ public class MouseControler implements MouseButtonEventListener, MotionEventList
 		double mouseY = MouseInfo.getPointerInfo().getLocation().getY();
 		
 		reRobot.mouseMove((int)mouseX + x, (int)mouseY + y);
+		
+		//HLog.dl("moveMouse delay" + debuger.getDelay());
 	}
 	
 	public void mouseRelease(int button) {
@@ -215,7 +220,7 @@ public class MouseControler implements MouseButtonEventListener, MotionEventList
 				//HLog.il("MotionEventHandleThread.run, size=" + motionEvents.size());
 				if (motionEvents.size() <= 0) {
 					try {
-						sleep(500);
+						sleep(5);
 					} catch (InterruptedException e) {}
 					
 					continue;

@@ -26,6 +26,7 @@ import cn.hisdar.cr.communication.handler.ScreenSizeListener;
 import cn.hisdar.cr.communication.socket.SocketIOManager;
 import cn.hisdar.cr.controler.GestureListener;
 import cn.hisdar.cr.controler.GestureParser;
+import cn.hisdar.cr.debug.DelayDebuger;
 import cn.hisdar.lib.log.HLog;
 
 public class ScreenHunterServer implements MotionEventListener, GestureListener, ScreenSizeListener {
@@ -273,7 +274,7 @@ public class ScreenHunterServer implements MotionEventListener, GestureListener,
 
 	@Override
 	public void motionEvent(HMotionEvent event) {
-//		sendFlag = true;
+		sendFlag = true;
 //		if (screenPictureSendThread == null || !screenPictureSendThread.isAlive()) {
 //			screenPictureSendThread = new Thread(new ScreenPictureSendRunnable());
 //			screenPictureSendThread.start();
