@@ -4,6 +4,6 @@ import java.net.Socket;
 
 public interface SocketIOEventListener {
 
-	public void socketIOEvent(byte[] data, int dataType, Socket socket);
+	public void socketIOEvent(SocketIOData data, Socket socket);
 	public void socketDisconnectEvent(Socket socket);
 }

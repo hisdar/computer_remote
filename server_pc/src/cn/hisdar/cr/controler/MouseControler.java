@@ -6,38 +6,37 @@ import java.awt.Robot;
 import java.awt.event.InputEvent;
 import java.util.ArrayList;
 
-import cn.hisdar.computerremote.common.Global;
 import cn.hisdar.cr.communication.data.MouseButtonData;
 import cn.hisdar.cr.communication.handler.HMotionEvent;
 import cn.hisdar.cr.communication.handler.MotionEventHandler;
 import cn.hisdar.cr.communication.handler.MotionEventListener;
 import cn.hisdar.cr.communication.handler.MouseButtonEventHandler;
 import cn.hisdar.cr.communication.handler.MouseButtonEventListener;
-import cn.hisdar.cr.event.HMouseEvent;
-import cn.hisdar.cr.event.HMouseEventListener;
 import cn.hisdar.lib.log.HLog;
 
 public class MouseControler implements MouseButtonEventListener, MotionEventListener {
 
-	private ArrayList<HMotionEvent> motionEvents = null;
-	
 	private HMotionEvent lastEvent = null;
 	private HMotionEvent downEvent = null;
 	private HMotionEvent upEvent = null;
+	private MotionEventHandleThread motionEventHandleThread = null;
+	private Robot reRobot = null;
 	
 	// multi finger action check
 	private boolean isSiginFinger = true;
 	
 	public MouseControler() {
-		motionEvents = new ArrayList<>();
 		MotionEventHandler.getInstance().addMotionEventListener(this);
 		MouseButtonEventHandler.getInstance().addMouseButtonEventListener(this);
+		motionEventHandleThread = new MotionEventHandleThread();
+		motionEventHandleThread.startHandler();
 	}
-
-	@Override
-	public void motionEvent(HMotionEvent event) {
+	
+	private void handleMotionEvent(HMotionEvent event) {
 		
+		//HLog.dl("handleMotionEvent");
 		switch (event.action) {
+		
 		case HMotionEvent.ACTION_MOVE:
 			
 			if (event.getPointerCount() > 1) {
@@ -61,9 +60,8 @@ public class MouseControler implements MouseButtonEventListener, MotionEventList
 			float x = event.getX(0) - lastEvent.getX(0);
 			float y = event.getY(0) - lastEvent.getY(0);
 			
-			if (x > 100 || y > 100) {
+			if (x > 200 || y > 200) {
 				HLog.dl("x=" + x + ", y=" + y);
-				
 				HLog.dl("last:" + lastEvent.toString());
 				break;
 			}
@@ -86,6 +84,12 @@ public class MouseControler implements MouseButtonEventListener, MotionEventList
 		}
 		
 		lastEvent = event;
+	}
+
+	@Override
+	public void motionEvent(HMotionEvent event) {
+		motionEventHandleThread.motionEvent(event);
+		//motionEventHandleThread.interrupt();
 	}
 	
 	private void mouseEventEx(HMotionEvent downEvent, HMotionEvent upEvent) {
@@ -112,17 +116,22 @@ public class MouseControler implements MouseButtonEventListener, MotionEventList
 	}
 	
 	public void mouseMove(int x, int y) {
-		Robot reRobot = null;
 		
-		try {
-			reRobot = new Robot();
-		} catch (AWTException e) {
-			HLog.el(e);
-			return;
+		if (reRobot == null) {
+			try {
+				reRobot = new Robot();
+			} catch (AWTException e) {
+				HLog.el(e);
+				return;
+			}
 		}
+		
+		x = x / 2;
+		y = y / 2;
 		
 		double mouseX = MouseInfo.getPointerInfo().getLocation().getX();
 		double mouseY = MouseInfo.getPointerInfo().getLocation().getY();
+		
 		reRobot.mouseMove((int)mouseX + x, (int)mouseY + y);
 	}
 	
@@ -173,6 +182,53 @@ public class MouseControler implements MouseButtonEventListener, MotionEventList
 			
 		} else {
 			HLog.el("Unhandled mouse event:" + mouseButtonData.toString());
+		}
+	}
+	
+	private class MotionEventHandleThread extends Thread {
+		
+		private boolean isStop = false;
+		private HMotionEvent motionEvent = null;
+		private ArrayList<HMotionEvent> motionEvents = null;
+		
+		public MotionEventHandleThread() {
+			motionEvents = new ArrayList<>();
+		}
+		
+		public void startHandler() {
+			isStop = false;
+			start();
+		}
+		
+		public void stopHandler() {
+			isStop = true;
+		}
+		
+		public void motionEvent(HMotionEvent event) {
+			motionEvents.add(event);
+		}
+		
+		public void run() {
+			
+			HLog.il("MotionEventHandleThread.run start");
+			while (!isStop) {
+				//HLog.il("MotionEventHandleThread.run, size=" + motionEvents.size());
+				if (motionEvents.size() <= 0) {
+					try {
+						sleep(500);
+					} catch (InterruptedException e) {}
+					
+					continue;
+				}
+				
+				//HLog.il("MotionEventHandleThread.run");
+				motionEvent = motionEvents.get(0);
+				motionEvents.remove(0);
+				handleMotionEvent(motionEvent);
+			}
+			
+			HLog.il("MotionEventHandleThread.run exit");
+			
 		}
 	}
 }

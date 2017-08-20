@@ -4,6 +4,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import cn.hisdar.cr.communication.data.AbstractData;
+import cn.hisdar.cr.communication.data.ResponseData;
 import cn.hisdar.cr.communication.handler.AbstractHandler;
 
 /***
@@ -93,11 +94,18 @@ public class SocketIOManager implements SocketIOEventListener {
 	}
 
 	@Override
-	public void socketIOEvent(byte[] data, int dataType, Socket socket) {
+	public void socketIOEvent(SocketIOData data, Socket socket) {
+		
+		// non-response data, we send a response data
+		if (data.getDataType() != AbstractData.DATA_TYPE_RESPONSE) {
+			ResponseData responseData = new ResponseData(data.getWriteTime(), data.getDataLength());
+			sendDataToClient(responseData, socket);
+		}
+		
 		for (int i = 0; i < dataHandlers.size(); i++) {
 			AbstractHandler dataHandler = dataHandlers.get(i);
-			if (dataHandler.getDataType() == dataType) {
-				dataHandler.decode(data, socket);
+			if (dataHandler.getDataType() == data.getDataType()) {
+				dataHandler.decode(data.getPayload(), socket);
 			}
 		}
 	}

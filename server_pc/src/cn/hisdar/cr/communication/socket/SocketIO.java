@@ -73,9 +73,9 @@ public class SocketIO {
 		socketIOEventListeners.remove(l);
 	}
 	
-    private void dispatch(byte[] data, int dataType) {
+    private void dispatch(SocketIOData data) {
         for (int i = 0; i < socketIOEventListeners.size(); i++) {
-			socketIOEventListeners.get(i).socketIOEvent(data, dataType, socket);
+			socketIOEventListeners.get(i).socketIOEvent(data, socket);
 		}
     }
 	
@@ -169,7 +169,8 @@ public class SocketIO {
 	
 	            // notify data
 	            if (!isStop) {
-	            	dispatch(dataBuf, dataType);
+	            	SocketIOData data = new SocketIOData(dataTime, dataType, dataLen, dataBuf);
+	            	dispatch(data);
 	            }
 		    }
 		}

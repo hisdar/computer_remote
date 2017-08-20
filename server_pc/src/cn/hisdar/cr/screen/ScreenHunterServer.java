@@ -125,6 +125,7 @@ public class ScreenHunterServer implements MotionEventListener, GestureListener,
        if (endY <= -1) {
           endY = height - 1;
        }
+       
        BufferedImage result = new BufferedImage(endX, endY , source.getType());
        for (int y = startY; y < endY+startY; y++) {
           for (int x = startX; x < endX+startX; x++) {
@@ -141,8 +142,6 @@ public class ScreenHunterServer implements MotionEventListener, GestureListener,
 		// 用电脑的屏幕尺寸，通过手机的分辨率计算，取小的一边
 		double phoneScreenRate = 1.0 * phoneScreenHeight / phoneScreenWidth;
 
-
-		
 		int imageWidth = pcScreenWidth;
 		int imageHeight = (int)(imageWidth * phoneScreenRate);
 
@@ -274,11 +273,11 @@ public class ScreenHunterServer implements MotionEventListener, GestureListener,
 
 	@Override
 	public void motionEvent(HMotionEvent event) {
-		sendFlag = true;
-		if (screenPictureSendThread == null || !screenPictureSendThread.isAlive()) {
-			screenPictureSendThread = new Thread(new ScreenPictureSendRunnable());
-			screenPictureSendThread.start();
-		}
+//		sendFlag = true;
+//		if (screenPictureSendThread == null || !screenPictureSendThread.isAlive()) {
+//			screenPictureSendThread = new Thread(new ScreenPictureSendRunnable());
+//			screenPictureSendThread.start();
+//		}
 	}
 
     public byte[] encode(BufferedImage screenImage) {

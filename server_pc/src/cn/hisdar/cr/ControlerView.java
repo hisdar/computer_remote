@@ -155,11 +155,7 @@ public class ControlerView extends JPanel implements ScreenSizeListener, MotionE
 					}
 					
 					Point localPoint = coordinateRransformation(touchPointers.get(i), screenSize, imageSize);
-
-					//imageGraphics.fillArc(localPoint.x, localPoint.y, 5, 5, 5, 5);
 					imageGraphics.fillRoundRect(localPoint.x, localPoint.y, 8, 8, 4, 4);
-					//imageGraphics.fillOval(localPoint.x, localPoint.y, 5, 5);
-					//imageGraphics.fillRect((int)touchPointers.get(i).x, (int)touchPointers.get(i).y, 5, 5);
 				}
 				
 				// draw border to touch eventImage
@@ -175,7 +171,7 @@ public class ControlerView extends JPanel implements ScreenSizeListener, MotionE
 	public void motionEvent(HMotionEvent event) {
 
 		currentMotionEvent = event;
-		touchEventDrawTherad.interrupt();
+		//touchEventDrawTherad.interrupt();
 		
 		switch (event.getAction()) {
 		case HMotionEvent.ACTION_UP:
@@ -200,7 +196,6 @@ public class ControlerView extends JPanel implements ScreenSizeListener, MotionE
 	
 	private void requestScreenSize(Socket clientSocket) {
 		// if client connect to server, request client screen size
-		//System.out.println("send request cmd to get screen size");
 		RequestData requestData = new RequestData(AbstractData.DATA_TYPE_SCREEN_SIZE);
 		SocketIOManager.getInstance().sendDataToClient(requestData, clientSocket);
 	}
@@ -214,7 +209,6 @@ public class ControlerView extends JPanel implements ScreenSizeListener, MotionE
 	@Override
 	public void screenSizeEvent(ScreenSizeData screenSizeData) {
 		this.screenSize = screenSizeData;
-		//HLog.dl(screenSize);
 	}
 
 	@Override

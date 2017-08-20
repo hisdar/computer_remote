@@ -9,6 +9,7 @@ public abstract class AbstractData {
     public static final int DATA_TYPE_SERVER_INFO    = 0x10006;
 	public static final int DATA_TYPE_MOUSE_BUTTON   = 0x10007;
 	public static final int DATA_TYPE_KEY_EVENT      = 0x10008;
+	public static final int DATA_TYPE_RESPONSE       = 0x10009;  // response data is used to test network delay
 
     abstract public int getDataType();
 

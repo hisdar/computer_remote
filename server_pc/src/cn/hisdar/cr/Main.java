@@ -46,13 +46,13 @@ public class Main {
 				| IllegalAccessException | UnsupportedLookAndFeelException e) {
 			HLog.el(e);
 		}
-	
-		// add system tray
-		ComputerRemoteSystemTray.getInstance();
-		
+
 		// init controls
 		MouseControler mouseControler = new MouseControler();
 		KeyControler keyControler = new KeyControler();
+		
+		// add system tray
+		ComputerRemoteSystemTray.getInstance();
 		
 		// init ui
 		ComputerRemoteFrame computerRemoteFrame = new ComputerRemoteFrame();
